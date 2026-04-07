@@ -110,6 +110,9 @@ function resolvePostgresPoolConfig(): PgPoolConfig {
   const rejectUnauthorized = !isDisabled(
     process.env.POSTGRES_SSL_REJECT_UNAUTHORIZED ?? process.env.RAKETGO_DB_SSL_REJECT_UNAUTHORIZED
   );
+  const sslExplicitlyDisabled = isDisabled(process.env.POSTGRES_SSL);
+  const sslExplicitlyEnabled =
+    isEnabled(process.env.POSTGRES_SSL) || isEnabled(process.env.RAKETGO_DB_SSL);
 
   const sslRequiredFromUrl = (() => {
     if (!connectionString) {
@@ -124,8 +127,11 @@ function resolvePostgresPoolConfig(): PgPoolConfig {
     }
   })();
 
+  // Hosted Postgres providers (including Supabase) generally require SSL.
+  // Default to SSL unless explicitly disabled.
   const sslEnabled =
-    sslRequiredFromUrl || isEnabled(process.env.POSTGRES_SSL) || isEnabled(process.env.RAKETGO_DB_SSL);
+    !sslExplicitlyDisabled &&
+    (sslRequiredFromUrl || sslExplicitlyEnabled || Boolean(connectionString) || Boolean(process.env.POSTGRES_HOST));
 
   if (connectionString) {
     return {
