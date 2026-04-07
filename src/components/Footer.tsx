@@ -18,36 +18,36 @@ export async function Footer() {
           <h4 className="text-sm font-bold uppercase tracking-[0.14em] text-brand-ink">Quick Links</h4>
           <ul>
             <li>
-              <Link href="/" className="nav-pill text-sm">
+              <Link href="/" className="footer-link">
                 Home
               </Link>
             </li>
             <li>
-              <Link href="/learn" className="nav-pill text-sm">
+              <Link href="/learn" className="footer-link">
                 Learn
               </Link>
             </li>
             {user ? (
               <>
                 <li>
-                  <Link href="/for-you" className="nav-pill text-sm">
+                  <Link href="/for-you" className="footer-link">
                     For You
                   </Link>
                 </li>
                 <li>
-                  <Link href="/messages" className="nav-pill text-sm">
+                  <Link href="/messages" className="footer-link">
                     Messages
                   </Link>
                 </li>
                 <li>
-                  <Link href="/notifications" className="nav-pill text-sm">
+                  <Link href="/notifications" className="footer-link">
                     Notifications
                   </Link>
                 </li>
                 <li>
                   <Link
                     href={roleHomePath(user.userType) as React.ComponentProps<typeof Link>["href"]}
-                    className="nav-pill text-sm"
+                    className="footer-link"
                   >
                     {user.userType === "admin" ? "Admin Dashboard" : "Dashboard"}
                   </Link>
@@ -56,12 +56,12 @@ export async function Footer() {
             ) : (
               <>
                 <li>
-                  <Link href="/login" className="nav-pill text-sm">
+                  <Link href="/login" className="footer-link">
                     Login
                   </Link>
                 </li>
                 <li>
-                  <Link href="/signup" className="nav-pill text-sm">
+                  <Link href="/signup" className="footer-link">
                     Sign Up
                   </Link>
                 </li>

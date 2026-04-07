@@ -170,23 +170,29 @@ export default async function HomePage({
         </form>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="muted">{total} jobs found</p>
-          <Link href="/for-you" className="btn btn-outline btn-small">
-            Open Personalized Feed
-          </Link>
+          {user ? (
+            <Link href="/for-you" className="btn btn-outline btn-small">
+              Open Personalized Feed
+            </Link>
+          ) : (
+            <Link href="/login?redirect=/for-you" className="btn btn-outline btn-small">
+              Login for Personalized Feed
+            </Link>
+          )}
         </div>
         {hasDataError ? (
-          <p className="muted">Data source is currently unavailable. Check database environment variables and verify schema setup.</p>
+          <p className="empty-state">Data source is currently unavailable. Check database environment variables and verify schema setup.</p>
         ) : null}
       </section>
 
       <section className="grid grid-2 items-start">
         <div className="grid gap-3">
           {hasDataError ? (
-            <p className="muted">Job listings are temporarily unavailable.</p>
+            <p className="empty-state">Job listings are temporarily unavailable.</p>
           ) : jobs.length ? (
             jobs.map((job) => <JobCard key={job.job_id} job={job} />)
           ) : (
-            <p className="muted">No active jobs found.</p>
+            <p className="empty-state">No active jobs found.</p>
           )}
           <div className="pager">
             <Link
@@ -195,7 +201,9 @@ export default async function HomePage({
             >
               Previous
             </Link>
-            <span className="btn btn-outline btn-small">Page {page}</span>
+            <span className="rounded-xl border-2 border-brand-blue bg-white px-3 py-1.5 text-xs font-semibold text-brand-ink sm:text-sm">
+              Page {page}
+            </span>
             <Link
               className="btn btn-outline btn-small"
               href={`/?${new URLSearchParams({ ...params, page: String(Math.min(totalPages, page + 1)) } as Record<string, string>).toString()}`}
@@ -207,12 +215,12 @@ export default async function HomePage({
 
         <aside className="card space-y-4">
           <div>
-            <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Learning Announcements</h2>
+            <h2 className="section-title">Learning Announcements</h2>
             <p className="muted">Stay updated with certifications and training opportunities.</p>
           </div>
           <div className="grid gap-3">
             {announcements.map((item) => (
-              <article key={item.post_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+              <article key={item.post_id} className="sub-card">
                 <h3 className="text-base font-semibold text-brand-ink">{item.post_title}</h3>
                 <p className="muted">{item.category || "General"}</p>
               </article>

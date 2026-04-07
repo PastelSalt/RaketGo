@@ -63,7 +63,7 @@ export default async function DashboardPage() {
         </section>
 
         <section className="card space-y-3">
-          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Skills</h2>
+          <h2 className="section-title">Skills</h2>
           <div className="grid gap-2">
             {skills.length ? (
               skills.map((skill) => (
@@ -78,17 +78,17 @@ export default async function DashboardPage() {
                 </div>
               ))
             ) : (
-              <p className="muted">No skills yet.</p>
+              <p className="empty-state">No skills yet.</p>
             )}
           </div>
         </section>
 
         <section className="card space-y-3">
-          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Recent Applications</h2>
+          <h2 className="section-title">Recent Applications</h2>
           <div className="grid gap-2">
             {applications.length ? (
               applications.map((item) => (
-                <article key={item.application_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+                <article key={item.application_id} className="sub-card">
                   <h3 className="text-base font-semibold text-brand-ink">{item.job_title}</h3>
                   <p className="muted">Employer: {item.employer_name}</p>
                   <p className="muted">
@@ -100,17 +100,17 @@ export default async function DashboardPage() {
                 </article>
               ))
             ) : (
-              <p className="muted">No applications yet.</p>
+              <p className="empty-state">No applications yet.</p>
             )}
           </div>
         </section>
 
         <section className="card space-y-3">
-          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Saved Jobs</h2>
+          <h2 className="section-title">Saved Jobs</h2>
           <div className="grid gap-2">
             {savedJobs.length ? (
               savedJobs.map((job) => (
-                <article key={job.job_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+                <article key={job.job_id} className="sub-card">
                   <h3 className="text-base font-semibold text-brand-ink">
                     <Link href={`/jobs/${job.job_id}`} className="hover:text-brand-ink-soft">
                       {job.job_title}
@@ -122,7 +122,7 @@ export default async function DashboardPage() {
                 </article>
               ))
             ) : (
-              <p className="muted">No saved jobs yet.</p>
+              <p className="empty-state">No saved jobs yet.</p>
             )}
           </div>
         </section>
@@ -176,11 +176,11 @@ export default async function DashboardPage() {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Posted Jobs</h2>
+        <h2 className="section-title">Posted Jobs</h2>
         <div className="grid gap-2">
           {jobs.length ? (
             jobs.map((job) => (
-              <article key={job.job_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+              <article key={job.job_id} className="sub-card">
                 <h3 className="text-base font-semibold text-brand-ink">
                   <Link href={`/jobs/${job.job_id}`} className="hover:text-brand-ink-soft">
                     {job.job_title}
@@ -192,24 +192,24 @@ export default async function DashboardPage() {
               </article>
             ))
           ) : (
-            <p className="muted">No jobs posted yet.</p>
+            <p className="empty-state">No jobs posted yet.</p>
           )}
         </div>
       </section>
 
       <section className="card space-y-3">
-        <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Pending Applications</h2>
+        <h2 className="section-title">Pending Applications</h2>
         <div className="grid gap-2">
           {pendingApps.length ? (
             pendingApps.map((item) => (
-              <article key={item.application_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+              <article key={item.application_id} className="sub-card">
                 <h3 className="text-base font-semibold text-brand-ink">{item.worker_name}</h3>
                 <p className="muted">{item.job_title}</p>
                 <p className="muted">Trust: {item.trust_score}</p>
               </article>
             ))
           ) : (
-            <p className="muted">No pending applications.</p>
+            <p className="empty-state">No pending applications.</p>
           )}
         </div>
       </section>

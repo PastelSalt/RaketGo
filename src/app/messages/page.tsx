@@ -78,35 +78,36 @@ export default async function MessagesPage({
 
       <section className="message-shell">
         <aside className="card message-list">
+          <h2 className="section-title">Conversations</h2>
           {conversations.length ? (
             conversations.map((item) => (
               <Link
                 key={item.user_id}
                 href={`/messages?with=${item.user_id}`}
-                className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4"
+                className={`sub-card transition-colors ${partnerId === item.user_id ? "sub-card-active" : ""}`}
               >
                 <strong className="text-sm text-brand-ink">{item.full_name}</strong>
-                <p className="muted">{item.user_type}</p>
-                <p className="muted">{item.last_message || "No messages yet"}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-ink-soft">{item.user_type}</p>
+                <p className="muted truncate">{item.last_message || "No messages yet"}</p>
                 {item.unread_count ? <span className="badge">{item.unread_count}</span> : null}
               </Link>
             ))
           ) : (
-            <p className="muted">No conversations yet.</p>
+            <p className="empty-state">No conversations yet.</p>
           )}
         </aside>
 
-        <div className="card">
+        <div className="card space-y-4">
           {partner ? (
             <>
-              <h2 className="mb-3 text-xl font-semibold tracking-tight text-brand-ink">Chat with {partner.full_name}</h2>
+              <h2 className="section-title">Chat with {partner.full_name}</h2>
               <div className="mb-4 grid gap-2">
                 {messages.length ? (
                   messages.map((message) => (
                     <MessageBubble key={message.message_id} currentUserId={session.userId} message={message} />
                   ))
                 ) : (
-                  <p className="muted">No messages yet.</p>
+                  <p className="empty-state">No messages yet.</p>
                 )}
               </div>
 
@@ -122,7 +123,7 @@ export default async function MessagesPage({
               </form>
             </>
           ) : (
-            <p className="muted">Select a conversation from the left panel.</p>
+            <p className="empty-state">Select a conversation from the left panel.</p>
           )}
         </div>
       </section>

@@ -24,14 +24,18 @@ export default async function ManageUsersPage() {
         <p className="muted">Review the most recent worker and employer accounts.</p>
       </div>
       <div className="grid gap-2">
-        {users.map((user) => (
-          <article key={user.user_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
-            <strong className="text-sm text-brand-ink">{user.full_name}</strong>
-            <p className="muted">
-              {user.user_type} • {user.mobile_number} • {user.city} • {user.account_status}
-            </p>
-          </article>
-        ))}
+        {users.length ? (
+          users.map((user) => (
+            <article key={user.user_id} className="sub-card">
+              <strong className="text-sm text-brand-ink">{user.full_name}</strong>
+              <p className="muted">
+                {user.user_type} • {user.mobile_number} • {user.city} • {user.account_status}
+              </p>
+            </article>
+          ))
+        ) : (
+          <p className="empty-state">No users available to display.</p>
+        )}
       </div>
     </section>
   );

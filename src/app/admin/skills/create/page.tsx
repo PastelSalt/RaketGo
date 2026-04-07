@@ -14,7 +14,7 @@ export default async function CreateSkillPostPage() {
     <section className="card mx-auto max-w-3xl space-y-4">
       <div>
         <h1 className="page-title">Create Skill Post</h1>
-        <p className="muted">Admin posting UI scaffolded during migration.</p>
+        <p className="muted">Use this form layout preview while the create API route is still being finalized.</p>
       </div>
       <form className="stack-form" action="#" method="post">
         <label>
@@ -34,8 +34,9 @@ export default async function CreateSkillPostPage() {
             <option value="certification">Certification</option>
           </select>
         </label>
-        <button className="btn btn-primary" type="submit" disabled>
-          API route not yet wired
+        <p className="empty-state">Posting is currently disabled until the admin API endpoint is wired.</p>
+        <button className="btn btn-secondary" type="submit" disabled>
+          Publish Skill Post
         </button>
       </form>
     </section>

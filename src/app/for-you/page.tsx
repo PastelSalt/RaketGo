@@ -37,7 +37,7 @@ export default async function ForYouPage() {
         </section>
 
         <section className="card space-y-3">
-          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Top Matches</h2>
+          <h2 className="section-title">Top Matches</h2>
           <div className="grid gap-3">
             {recommendedJobs.length ? (
               recommendedJobs.map((job) => (
@@ -49,13 +49,13 @@ export default async function ForYouPage() {
                 </div>
               ))
             ) : (
-              <p className="muted">No recommendations yet. Add more skills in your dashboard.</p>
+              <p className="empty-state">No recommendations yet. Add more skills in your dashboard.</p>
             )}
           </div>
         </section>
 
         <section className="card space-y-3">
-          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Trending Jobs</h2>
+          <h2 className="section-title">Trending Jobs</h2>
           <div className="grid gap-3">
             {trendingJobs.map((job) => (
               <div key={job.job_id}>
@@ -117,11 +117,11 @@ export default async function ForYouPage() {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Suggested Workers</h2>
+        <h2 className="section-title">Suggested Workers</h2>
         <div className="grid gap-3">
           {recommendedWorkers.length ? (
             recommendedWorkers.map((worker) => (
-              <article key={worker.user_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+              <article key={worker.user_id} className="sub-card">
                 <h3 className="text-base font-semibold text-brand-ink">{worker.full_name}</h3>
                 <p className="muted">
                   {worker.city}, {worker.province}
@@ -134,13 +134,13 @@ export default async function ForYouPage() {
               </article>
             ))
           ) : (
-            <p className="muted">No worker recommendations yet. Post active jobs with skill requirements.</p>
+            <p className="empty-state">No worker recommendations yet. Post active jobs with skill requirements.</p>
           )}
         </div>
       </section>
 
       <section className="card space-y-3">
-        <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Trending Jobs</h2>
+        <h2 className="section-title">Trending Jobs</h2>
         <div className="grid gap-3">
           {trendingJobs.map((job) => (
             <div key={job.job_id}>

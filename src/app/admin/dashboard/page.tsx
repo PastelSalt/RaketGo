@@ -53,24 +53,32 @@ export default async function AdminDashboardPage() {
 
       <section className="grid grid-2">
         <article className="card space-y-2">
-          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Recent Users</h2>
-          {recentUsers.map((item) => (
-            <p key={item.user_id} className="muted">
-              {item.full_name} ({item.user_type}) • {item.city}
-            </p>
-          ))}
+          <h2 className="section-title">Recent Users</h2>
+          {recentUsers.length ? (
+            recentUsers.map((item) => (
+              <p key={item.user_id} className="muted">
+                {item.full_name} ({item.user_type}) • {item.city}
+              </p>
+            ))
+          ) : (
+            <p className="empty-state">No recent users found.</p>
+          )}
           <Link href="/admin/users/manage" className="btn btn-outline btn-small">
             Manage Users
           </Link>
         </article>
 
         <article className="card space-y-2">
-          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Recent Jobs</h2>
-          {recentJobs.map((item) => (
-            <p key={item.job_id} className="muted">
-              {item.job_title} • {item.employer_name} • {item.job_status}
-            </p>
-          ))}
+          <h2 className="section-title">Recent Jobs</h2>
+          {recentJobs.length ? (
+            recentJobs.map((item) => (
+              <p key={item.job_id} className="muted">
+                {item.job_title} • {item.employer_name} • {item.job_status}
+              </p>
+            ))
+          ) : (
+            <p className="empty-state">No recent jobs found.</p>
+          )}
           <Link href="/admin/skills/create" className="btn btn-outline btn-small">
             Add Skill Post
           </Link>

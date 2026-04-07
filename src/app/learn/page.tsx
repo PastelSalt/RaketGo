@@ -114,7 +114,7 @@ export default async function LearnPage({
             </article>
           ))
         ) : (
-          <p className="muted">No learning posts found.</p>
+          <p className="empty-state">No learning posts found.</p>
         )}
       </section>
     </div>

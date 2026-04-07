@@ -36,18 +36,20 @@ export default async function NotificationsPage({
 
   return (
     <div className="grid gap-6">
-      <section className="card flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="page-title">Notifications</h1>
-          <p className="muted">Stay on top of application and message updates.</p>
+      <section className="card space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="page-title">Notifications</h1>
+            <p className="muted">Stay on top of application and message updates.</p>
+          </div>
+          <form action="/api/notifications" method="post">
+            <input type="hidden" name="action" value="mark_all_read" />
+            <button className="btn btn-outline btn-small" type="submit">
+              Mark All Read
+            </button>
+          </form>
         </div>
         {params.success ? <div className="alert alert-success">{decodeURIComponent(params.success)}</div> : null}
-        <form action="/api/notifications" method="post">
-          <input type="hidden" name="action" value="mark_all_read" />
-          <button className="btn btn-outline btn-small" type="submit">
-            Mark All Read
-          </button>
-        </form>
       </section>
 
       <section className="grid gap-3">
@@ -67,7 +69,7 @@ export default async function NotificationsPage({
             </div>
           ))
         ) : (
-          <p className="muted">No notifications yet.</p>
+          <p className="empty-state">No notifications yet.</p>
         )}
       </section>
     </div>

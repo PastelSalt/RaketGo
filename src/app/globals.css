@@ -69,6 +69,10 @@
     @apply inline-flex items-center justify-center rounded-xl border-2 px-4 py-2 text-sm font-semibold transition-colors;
   }
 
+  .btn:disabled {
+    @apply cursor-not-allowed border-brand-blue bg-white text-brand-ink-soft;
+  }
+
   .btn-small {
     @apply px-3 py-1.5 text-xs sm:text-sm;
   }
@@ -89,6 +93,10 @@
     @apply mb-3 text-2xl font-bold tracking-tight text-brand-ink sm:text-3xl;
   }
 
+  .section-title {
+    @apply text-xl font-semibold tracking-tight text-brand-ink;
+  }
+
   .card {
     @apply rounded-3xl border-2 border-brand-blue bg-white p-5;
     animation: fade-up 360ms ease-out;
@@ -96,6 +104,18 @@
 
   .card-unread {
     @apply border-brand-red-strong;
+  }
+
+  .sub-card {
+    @apply rounded-2xl border-2 border-brand-blue bg-brand-blue p-4;
+  }
+
+  .sub-card-active {
+    @apply border-brand-red-strong bg-white;
+  }
+
+  .empty-state {
+    @apply rounded-2xl border-2 border-dashed border-brand-blue bg-white px-4 py-5 text-center text-sm text-brand-ink-soft;
   }
 
   .grid {
@@ -163,6 +183,10 @@
 
   .footer-grid ul {
     @apply m-0 grid list-none gap-2 p-0;
+  }
+
+  .footer-link {
+    @apply text-sm font-medium text-brand-ink transition-colors hover:text-brand-ink-soft;
   }
 
   .footer-bottom {

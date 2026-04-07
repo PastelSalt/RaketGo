@@ -134,7 +134,7 @@ export default async function JobDetailsPage({
       </section>
 
       <section className="card space-y-2">
-        <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Job Requirements</h2>
+        <h2 className="section-title">Job Requirements</h2>
         <p className="text-sm text-brand-ink">
           <strong>Required skills:</strong> {job.required_skills || "Not specified"}
         </p>
@@ -151,11 +151,11 @@ export default async function JobDetailsPage({
 
       {session?.userType === "worker" ? (
         <section className="card space-y-3">
-          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Worker Actions</h2>
+          <h2 className="section-title">Worker Actions</h2>
           {userApplication ? (
             <p className="muted">Application status: {userApplication.application_status}</p>
           ) : (
-            <p className="muted">You have not applied yet.</p>
+            <p className="empty-state">You have not applied yet.</p>
           )}
 
           {job.employer_id !== session.userId ? (
@@ -193,18 +193,18 @@ export default async function JobDetailsPage({
               </form>
             </div>
           ) : (
-            <p className="muted">You are the employer for this job.</p>
+            <p className="empty-state">You are the employer for this job.</p>
           )}
         </section>
       ) : null}
 
       {session?.userType === "employer" && session.userId === job.employer_id ? (
         <section className="card space-y-3">
-          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Applicants</h2>
+          <h2 className="section-title">Applicants</h2>
           <div className="grid gap-3">
             {applications.length ? (
               applications.map((item) => (
-                <article key={item.application_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+                <article key={item.application_id} className="sub-card">
                   <h3 className="text-base font-semibold text-brand-ink">{item.full_name}</h3>
                   <p className="muted">
                     {item.mobile_number} • Trust {item.trust_score}
@@ -237,7 +237,7 @@ export default async function JobDetailsPage({
                 </article>
               ))
             ) : (
-              <p className="muted">No applications yet.</p>
+              <p className="empty-state">No applications yet.</p>
             )}
           </div>
         </section>
@@ -245,7 +245,7 @@ export default async function JobDetailsPage({
 
       {!session ? (
         <section className="card space-y-3">
-          <p className="muted">Login to apply, save jobs, and message employers.</p>
+          <p className="empty-state">Login to apply, save jobs, and message employers.</p>
           <Link href={`/login?redirect=/jobs/${job.job_id}`} className="btn btn-primary btn-small">
             Login to Continue
           </Link>
