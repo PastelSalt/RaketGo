@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --bg: #f8fbff;
   --panel: #ffffff;
@@ -390,3 +394,4 @@ a {
     padding: 0.5rem 0;
   }
 }
+
