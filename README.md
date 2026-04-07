@@ -66,6 +66,32 @@ Commands:
 - npm run dev
 - npm run typecheck
 
+## Vercel Deployment Checklist
+
+Set these Environment Variables in your Vercel project:
+
+- SESSION_SECRET: minimum 32 characters
+- RAKETGO_DATABASE_URL: preferred single MySQL connection string
+
+If you are not using RAKETGO_DATABASE_URL, set all of these instead:
+
+- RAKETGO_DB_HOST
+- RAKETGO_DB_PORT
+- RAKETGO_DB_USER
+- RAKETGO_DB_PASS
+- RAKETGO_DB_NAME
+
+Optional SSL flags for managed MySQL providers:
+
+- RAKETGO_DB_SSL=true
+- RAKETGO_DB_SSL_REJECT_UNAUTHORIZED=true (set false only if your provider explicitly requires it)
+
+Notes:
+
+- Localhost values do not work on Vercel unless you are tunneling to a public database endpoint.
+- After changing Vercel Environment Variables, trigger a new deployment.
+- If the home page loads but shows a data-source warning, your database env values are still incorrect or unreachable from Vercel.
+
 ## Database
 
 The app expects the same schema as database/schema.sql from the legacy PHP project.

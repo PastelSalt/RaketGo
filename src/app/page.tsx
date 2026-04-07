@@ -62,46 +62,68 @@ export default async function HomePage({
         ? "j.pay_amount ASC, j.created_at DESC"
         : "j.created_at DESC";
 
-  const countRows = await queryRows<{ total: number }>(
-    `SELECT COUNT(*) AS total FROM job_posts j ${whereClause}`,
-    args
-  );
+  let total = 0;
+  let totalPages = 1;
+  let jobs: Array<{
+    job_id: number;
+    job_title: string;
+    location_city: string;
+    location_region: string;
+    pay_amount: number;
+    pay_type: string;
+    job_status: string;
+    employer_name: string;
+    created_at: string;
+  }> = [];
+  let categories: Array<{ job_category: string | null }> = [];
+  let announcements: Array<{ post_id: number; post_title: string; category: string | null; created_at: string }> = [];
+  let hasDataError = false;
 
-  const total = Number(countRows[0]?.total ?? 0);
-  const totalPages = Math.max(1, Math.ceil(total / limit));
+  try {
+    const countRows = await queryRows<{ total: number }>(
+      `SELECT COUNT(*) AS total FROM job_posts j ${whereClause}`,
+      args
+    );
 
-  const jobs = await queryRows<
-    Array<{
-      job_id: number;
-      job_title: string;
-      location_city: string;
-      location_region: string;
-      pay_amount: number;
-      pay_type: string;
-      job_status: string;
-      employer_name: string;
-      created_at: string;
-    }>
-  >(
-    `SELECT j.job_id, j.job_title, j.location_city, j.location_region, j.pay_amount, j.pay_type, j.job_status, j.created_at,
-            u.full_name AS employer_name
-     FROM job_posts j
-     JOIN users u ON j.employer_id = u.user_id
-     ${whereClause}
-     ORDER BY ${sortSql}
-     LIMIT ? OFFSET ?`,
-    [...args, limit, offset]
-  );
+    total = Number(countRows[0]?.total ?? 0);
+    totalPages = Math.max(1, Math.ceil(total / limit));
 
-  const categories = await queryRows<{ job_category: string | null }>(
-    "SELECT DISTINCT job_category FROM job_posts WHERE job_category IS NOT NULL AND job_category != '' ORDER BY job_category ASC"
-  );
+    jobs = await queryRows<
+      Array<{
+        job_id: number;
+        job_title: string;
+        location_city: string;
+        location_region: string;
+        pay_amount: number;
+        pay_type: string;
+        job_status: string;
+        employer_name: string;
+        created_at: string;
+      }>
+    >(
+      `SELECT j.job_id, j.job_title, j.location_city, j.location_region, j.pay_amount, j.pay_type, j.job_status, j.created_at,
+              u.full_name AS employer_name
+       FROM job_posts j
+       JOIN users u ON j.employer_id = u.user_id
+       ${whereClause}
+       ORDER BY ${sortSql}
+       LIMIT ? OFFSET ?`,
+      [...args, limit, offset]
+    );
 
-  const announcements = await queryRows<
-    Array<{ post_id: number; post_title: string; category: string | null; created_at: string }>
-  >(
-    "SELECT post_id, post_title, category, created_at FROM skill_posts ORDER BY is_featured DESC, created_at DESC LIMIT 5"
-  );
+    categories = await queryRows<{ job_category: string | null }>(
+      "SELECT DISTINCT job_category FROM job_posts WHERE job_category IS NOT NULL AND job_category != '' ORDER BY job_category ASC"
+    );
+
+    announcements = await queryRows<
+      Array<{ post_id: number; post_title: string; category: string | null; created_at: string }>
+    >(
+      "SELECT post_id, post_title, category, created_at FROM skill_posts ORDER BY is_featured DESC, created_at DESC LIMIT 5"
+    );
+  } catch (error) {
+    hasDataError = true;
+    console.error("Failed to load homepage data.", error);
+  }
 
   return (
     <div className="grid" style={{ gap: "1rem" }}>
@@ -135,11 +157,20 @@ export default async function HomePage({
           </button>
         </form>
         <p className="muted">{total} jobs found</p>
+        {hasDataError ? (
+          <p className="muted">Data source is currently unavailable. Check your Vercel database environment variables.</p>
+        ) : null}
       </section>
 
       <section className="grid grid-2">
         <div className="grid" style={{ gap: "0.8rem" }}>
-          {jobs.length ? jobs.map((job) => <JobCard key={job.job_id} job={job} />) : <p>No active jobs found.</p>}
+          {hasDataError ? (
+            <p>Job listings are temporarily unavailable.</p>
+          ) : jobs.length ? (
+            jobs.map((job) => <JobCard key={job.job_id} job={job} />)
+          ) : (
+            <p>No active jobs found.</p>
+          )}
           <div className="pager">
             <Link
               className="btn btn-outline btn-small"
