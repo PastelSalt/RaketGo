@@ -1,427 +1,216 @@
-import { getDatabaseDialect, queryRows } from "@/lib/db";
+import Link from "next/link";
+import { JobCard } from "@/components/JobCard";
+import { getSessionUser } from "@/lib/auth";
+import { queryRows } from "@/lib/db";
+import { PHILIPPINES_REGIONS } from "@/lib/validators";
 
-declare const process: {
-  env: Record<string, string | undefined>;
+type SearchParams = {
+  q?: string;
+  region?: string;
+  category?: string;
+  sort?: string;
+  page?: string;
 };
 
-type TableCheck = {
-  table: string;
-  ok: boolean;
-  count: number | null;
-  error: string | null;
-};
+export default async function HomePage({
+  searchParams
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+  const user = await getSessionUser();
 
-const POSTGRES_PROTOCOLS = new Set(["postgres:", "postgresql:"]);
-const MYSQL_PROTOCOLS = new Set(["mysql:", "mariadb:"]);
-const SECRET_ENV_PATTERN = /(SECRET|PASSWORD|PASS|TOKEN|KEY)/i;
+  const q = (params.q ?? "").trim();
+  const region = (params.region ?? "").trim();
+  const category = (params.category ?? "").trim();
+  const sort = (params.sort ?? "recent").trim();
+  const page = Math.max(1, Number(params.page ?? "1") || 1);
+  const limit = 10;
+  const offset = (page - 1) * limit;
 
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
+  const whereParts: string[] = ["j.job_status = 'active'"];
+  const args: unknown[] = [];
+
+  if (q) {
+    whereParts.push("(j.job_title LIKE ? OR j.job_description LIKE ? OR j.required_skills LIKE ?)");
+    args.push(`%${q}%`, `%${q}%`, `%${q}%`);
   }
 
-  try {
-    return JSON.stringify(error);
-  } catch {
-    return String(error);
-  }
-}
-
-function isPostgresUrl(value: string | undefined): boolean {
-  if (!value) {
-    return false;
+  if (region && PHILIPPINES_REGIONS[region]) {
+    whereParts.push("j.location_region = ?");
+    args.push(region);
   }
 
-  try {
-    return POSTGRES_PROTOCOLS.has(new URL(value).protocol);
-  } catch {
-    return false;
-  }
-}
-
-function isMysqlUrl(value: string | undefined): boolean {
-  if (!value) {
-    return false;
+  if (category) {
+    whereParts.push("j.job_category = ?");
+    args.push(category);
   }
 
-  try {
-    return MYSQL_PROTOCOLS.has(new URL(value).protocol);
-  } catch {
-    return false;
-  }
-}
-
-function maskSecret(value: string): string {
-  if (!value) {
-    return "";
-  }
-
-  if (value.length <= 8) {
-    return "*".repeat(value.length);
-  }
-
-  return `${value.slice(0, 4)}...${value.slice(-4)}`;
-}
-
-function maskDatabaseUrl(value: string): string {
-  try {
-    const parsed = new URL(value);
-
-    if (parsed.username) {
-      parsed.username = maskSecret(decodeURIComponent(parsed.username));
-    }
-
-    if (parsed.password) {
-      parsed.password = "********";
-    }
-
-    return parsed.toString();
-  } catch {
-    return value;
-  }
-}
-
-function maskEnvValue(name: string, value: string | undefined): string {
-  if (!value) {
-    return "(not set)";
-  }
-
-  if (name.endsWith("_URL")) {
-    return maskDatabaseUrl(value);
-  }
-
-  if (SECRET_ENV_PATTERN.test(name)) {
-    return maskSecret(value);
-  }
-
-  return value;
-}
-
-function parseConnectionUrl(value: string | undefined) {
-  if (!value) {
-    return null;
-  }
-
-  try {
-    const parsed = new URL(value);
-    const databaseName = decodeURIComponent(parsed.pathname.replace(/^\//, "")) || "(empty)";
-
-    return {
-      protocol: parsed.protocol.replace(":", ""),
-      host: parsed.hostname || "(empty)",
-      port: parsed.port || "(default)",
-      username: parsed.username ? decodeURIComponent(parsed.username) : "(none)",
-      hasPassword: Boolean(parsed.password),
-      databaseName,
-      sslMode: parsed.searchParams.get("sslmode") ?? "(none)",
-      rawMasked: maskDatabaseUrl(value)
-    };
-  } catch {
-    return null;
-  }
-}
-
-function resolvePostgresConnectionString(): string | undefined {
-  return (
-    process.env.POSTGRES_URL ??
-    process.env.POSTGRES_PRISMA_URL ??
-    process.env.POSTGRES_URL_NON_POOLING ??
-    (isPostgresUrl(process.env.DATABASE_URL) ? process.env.DATABASE_URL : undefined)
-  );
-}
-
-function resolveMysqlConnectionString(): string | undefined {
-  return [process.env.RAKETGO_DATABASE_URL, process.env.MYSQL_URL, process.env.DATABASE_URL].find((value) =>
-    isMysqlUrl(value)
-  );
-}
-
-export default async function HomePage() {
-  const generatedAt = new Date().toISOString();
-  const dialect = getDatabaseDialect();
-
-  const envNames = [
-    "NODE_ENV",
-    "SESSION_SECRET",
-    "POSTGRES_URL",
-    "POSTGRES_PRISMA_URL",
-    "POSTGRES_URL_NON_POOLING",
-    "POSTGRES_HOST",
-    "POSTGRES_PORT",
-    "POSTGRES_DATABASE",
-    "POSTGRES_USER",
-    "POSTGRES_PASSWORD",
-    "POSTGRES_SSL",
-    "POSTGRES_SSL_REJECT_UNAUTHORIZED",
-    "DATABASE_URL",
-    "RAKETGO_DATABASE_URL",
-    "MYSQL_URL",
-    "RAKETGO_DB_HOST",
-    "RAKETGO_DB_PORT",
-    "RAKETGO_DB_NAME",
-    "RAKETGO_DB_USER",
-    "RAKETGO_DB_PASS",
-    "RAKETGO_DB_SSL",
-    "RAKETGO_DB_SSL_REJECT_UNAUTHORIZED",
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY",
-    "SUPABASE_ANON_KEY",
-    "SUPABASE_SERVICE_ROLE_KEY",
-    "SUPABASE_SECRET_KEY",
-    "SUPABASE_JWT_SECRET"
-  ] as const;
-
-  const envSnapshot = envNames.map((name) => {
-    const value = process.env[name];
-
-    return {
-      name,
-      isSet: Boolean(value),
-      displayValue: maskEnvValue(name, value)
-    };
-  });
-
-  const postgresConnection = resolvePostgresConnectionString();
-  const mysqlConnection = resolveMysqlConnectionString();
-  const activeConnection = dialect === "postgres" ? postgresConnection : mysqlConnection;
-  const activeConnectionDetails = parseConnectionUrl(activeConnection);
-
-  let connectionOk = false;
-  let connectionError: string | null = null;
-  let connectionErrorStack: string | null = null;
-  let latencyMs: number | null = null;
-  let databaseTime: string | null = null;
-  let serverVersion: string | null = null;
-  let databaseName: string | null = null;
-  let databaseUser: string | null = null;
-
-  const connectStart = Date.now();
-
-  try {
-    const nowRows = await queryRows<{ now: string }>("SELECT NOW() AS now");
-    const versionRows = await queryRows<{ version: string }>("SELECT version() AS version");
-
-    connectionOk = true;
-    latencyMs = Date.now() - connectStart;
-    databaseTime = String(nowRows[0]?.now ?? "");
-    serverVersion = String(versionRows[0]?.version ?? "");
-
-    if (dialect === "postgres") {
-      const identityRows = await queryRows<
-        Array<{ database_name: string | null; db_user: string | null }>
-      >("SELECT current_database() AS database_name, current_user AS db_user");
-      databaseName = identityRows[0]?.database_name ?? null;
-      databaseUser = identityRows[0]?.db_user ?? null;
-    } else {
-      const identityRows = await queryRows<
-        Array<{ database_name: string | null; db_user: string | null }>
-      >("SELECT DATABASE() AS database_name, CURRENT_USER() AS db_user");
-      databaseName = identityRows[0]?.database_name ?? null;
-      databaseUser = identityRows[0]?.db_user ?? null;
-    }
-  } catch (error) {
-    connectionError = getErrorMessage(error);
-    connectionErrorStack = error instanceof Error ? error.stack ?? null : null;
-  }
-
-  const tableNames = [
-    "users",
-    "job_posts",
-    "skill_posts",
-    "job_applications",
-    "messages",
-    "notifications",
-    "auth_rate_limits",
-    "user_interactions"
-  ];
-
-  let tableChecks: TableCheck[] = [];
-
-  if (connectionOk) {
-    tableChecks = await Promise.all(
-      tableNames.map(async (table) => {
-        try {
-          const rows = await queryRows<Array<{ total: number }>>(
-            `SELECT COUNT(*) AS total FROM ${table}`
-          );
-
-          return {
-            table,
-            ok: true,
-            count: Number(rows[0]?.total ?? 0),
-            error: null
-          } as TableCheck;
-        } catch (error) {
-          return {
-            table,
-            ok: false,
-            count: null,
-            error: getErrorMessage(error)
-          } as TableCheck;
-        }
-      })
+  if (user?.userType === "worker") {
+    whereParts.push(
+      "j.job_id NOT IN (SELECT job_id FROM job_applications WHERE worker_id = ?)"
     );
-  } else {
-    tableChecks = tableNames.map((table) => ({
-      table,
-      ok: false,
-      count: null,
-      error: "Skipped because primary connection check failed."
-    }));
+    args.push(user.userId);
   }
 
-  const healthyTableCount = tableChecks.filter((item) => item.ok).length;
+  const whereClause = `WHERE ${whereParts.join(" AND ")}`;
+
+  const sortSql =
+    sort === "pay_desc"
+      ? "j.pay_amount DESC, j.created_at DESC"
+      : sort === "pay_asc"
+        ? "j.pay_amount ASC, j.created_at DESC"
+        : "j.created_at DESC";
+
+  let total = 0;
+  let totalPages = 1;
+  let jobs: Array<{
+    job_id: number;
+    job_title: string;
+    location_city: string;
+    location_region: string;
+    pay_amount: number;
+    pay_type: string;
+    job_status: string;
+    employer_name: string;
+    created_at: string;
+  }> = [];
+  let categories: Array<{ job_category: string | null }> = [];
+  let announcements: Array<{ post_id: number; post_title: string; category: string | null; created_at: string }> = [];
+  let hasDataError = false;
+
+  try {
+    const countRows = await queryRows<{ total: number }>(
+      `SELECT COUNT(*) AS total FROM job_posts j ${whereClause}`,
+      args
+    );
+
+    total = Number(countRows[0]?.total ?? 0);
+    totalPages = Math.max(1, Math.ceil(total / limit));
+
+    jobs = await queryRows<
+      Array<{
+        job_id: number;
+        job_title: string;
+        location_city: string;
+        location_region: string;
+        pay_amount: number;
+        pay_type: string;
+        job_status: string;
+        employer_name: string;
+        created_at: string;
+      }>
+    >(
+      `SELECT j.job_id, j.job_title, j.location_city, j.location_region, j.pay_amount, j.pay_type, j.job_status, j.created_at,
+              u.full_name AS employer_name
+       FROM job_posts j
+       JOIN users u ON j.employer_id = u.user_id
+       ${whereClause}
+       ORDER BY ${sortSql}
+       LIMIT ? OFFSET ?`,
+      [...args, limit, offset]
+    );
+
+    categories = await queryRows<{ job_category: string | null }>(
+      "SELECT DISTINCT job_category FROM job_posts WHERE job_category IS NOT NULL AND job_category != '' ORDER BY job_category ASC"
+    );
+  } catch (error) {
+    hasDataError = true;
+    console.error("Failed to load homepage data.", error);
+  }
+
+  if (!hasDataError) {
+    try {
+      announcements = await queryRows<
+        Array<{ post_id: number; post_title: string; category: string | null; created_at: string }>
+      >(
+        "SELECT post_id, post_title, category, created_at FROM skill_posts ORDER BY is_featured DESC, created_at DESC LIMIT 5"
+      );
+    } catch (error) {
+      console.error("Failed to load homepage announcements.", error);
+    }
+  }
 
   return (
     <div className="grid" style={{ gap: "1rem" }}>
       <section className="card">
-        <h1 className="page-title" style={{ marginBottom: "0.4rem" }}>
-          Database Diagnostics Dashboard
-        </h1>
-        <p className="muted" style={{ margin: 0 }}>
-          Homepage UI is temporarily replaced with live database diagnostics.
-        </p>
-        <p className="muted" style={{ marginTop: "0.5rem" }}>
-          Generated at: {generatedAt}
-        </p>
+        <h1 className="page-title">Find Jobs Across the Philippines</h1>
+        <form className="search-form" method="get">
+          <input name="q" defaultValue={q} placeholder="Search title, skill, or description" />
+          <select name="region" defaultValue={region}>
+            <option value="">All regions</option>
+            {Object.entries(PHILIPPINES_REGIONS).map(([code, label]) => (
+              <option value={code} key={code}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <select name="category" defaultValue={category}>
+            <option value="">All categories</option>
+            {categories.map((item) => (
+              <option value={item.job_category ?? ""} key={item.job_category ?? "x"}>
+                {item.job_category}
+              </option>
+            ))}
+          </select>
+          <select name="sort" defaultValue={sort}>
+            <option value="recent">Most recent</option>
+            <option value="pay_desc">Highest pay</option>
+            <option value="pay_asc">Lowest pay</option>
+          </select>
+          <button className="btn btn-primary" type="submit">
+            Filter
+          </button>
+        </form>
+        <p className="muted">{total} jobs found</p>
+        {hasDataError ? (
+          <p className="muted">Data source is currently unavailable. Check database environment variables and verify schema setup.</p>
+        ) : null}
       </section>
 
       <section className="grid grid-2">
-        <article className="card">
-          <h2>Connection Summary</h2>
-          <p>
-            <strong>Dialect selected:</strong> {dialect}
-          </p>
-          <p>
-            <strong>Status:</strong> {connectionOk ? "CONNECTED" : "FAILED"}
-          </p>
-          <p>
-            <strong>Latency:</strong> {latencyMs ?? "n/a"} ms
-          </p>
-          <p>
-            <strong>Database time:</strong> {databaseTime ?? "n/a"}
-          </p>
-          <p>
-            <strong>Server version:</strong> {serverVersion ?? "n/a"}
-          </p>
-          <p>
-            <strong>Database name:</strong> {databaseName ?? "n/a"}
-          </p>
-          <p>
-            <strong>Database user:</strong> {databaseUser ?? "n/a"}
-          </p>
-          <p>
-            <strong>Healthy tables:</strong> {healthyTableCount}/{tableChecks.length}
-          </p>
-          {connectionError ? (
-            <p style={{ color: "#a33" }}>
-              <strong>Connection error:</strong> {connectionError}
-            </p>
-          ) : null}
-        </article>
-
-        <article className="card">
-          <h2>Resolved Connection</h2>
-          <p>
-            <strong>Resolved Postgres URL:</strong>
-          </p>
-          <p style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-            {postgresConnection ? maskDatabaseUrl(postgresConnection) : "(none)"}
-          </p>
-          <p>
-            <strong>Resolved MySQL URL:</strong>
-          </p>
-          <p style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-            {mysqlConnection ? maskDatabaseUrl(mysqlConnection) : "(none)"}
-          </p>
-          <p>
-            <strong>Active URL used by dialect:</strong>
-          </p>
-          <p style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-            {activeConnection ? maskDatabaseUrl(activeConnection) : "(none)"}
-          </p>
-
-          {activeConnectionDetails ? (
-            <div className="grid" style={{ gap: "0.3rem", marginTop: "0.5rem" }}>
-              <p style={{ margin: 0 }}>
-                <strong>Protocol:</strong> {activeConnectionDetails.protocol}
-              </p>
-              <p style={{ margin: 0 }}>
-                <strong>Host:</strong> {activeConnectionDetails.host}
-              </p>
-              <p style={{ margin: 0 }}>
-                <strong>Port:</strong> {activeConnectionDetails.port}
-              </p>
-              <p style={{ margin: 0 }}>
-                <strong>User:</strong> {activeConnectionDetails.username}
-              </p>
-              <p style={{ margin: 0 }}>
-                <strong>Password set:</strong> {activeConnectionDetails.hasPassword ? "yes" : "no"}
-              </p>
-              <p style={{ margin: 0 }}>
-                <strong>Database:</strong> {activeConnectionDetails.databaseName}
-              </p>
-              <p style={{ margin: 0 }}>
-                <strong>sslmode:</strong> {activeConnectionDetails.sslMode}
-              </p>
-            </div>
-          ) : null}
-        </article>
-      </section>
-
-      <section className="card">
-        <h2>Environment Variables (masked)</h2>
-        <p className="muted">All key/password/secret values are partially redacted for safety.</p>
-        <div className="grid" style={{ gap: "0.4rem" }}>
-          {envSnapshot.map((entry) => (
-            <div
-              key={entry.name}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "340px 90px 1fr",
-                gap: "0.6rem",
-                alignItems: "start"
-              }}
+        <div className="grid" style={{ gap: "0.8rem" }}>
+          {hasDataError ? (
+            <p>Job listings are temporarily unavailable.</p>
+          ) : jobs.length ? (
+            jobs.map((job) => <JobCard key={job.job_id} job={job} />)
+          ) : (
+            <p>No active jobs found.</p>
+          )}
+          <div className="pager">
+            <Link
+              className="btn btn-outline btn-small"
+              href={`/?${new URLSearchParams({ ...params, page: String(Math.max(1, page - 1)) } as Record<string, string>).toString()}`}
             >
-              <span style={{ fontFamily: "monospace" }}>{entry.name}</span>
-              <span className="muted">{entry.isSet ? "set" : "missing"}</span>
-              <span style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-                {entry.displayValue}
-              </span>
-            </div>
-          ))}
+              Previous
+            </Link>
+            <span className="btn btn-outline btn-small">Page {page}</span>
+            <Link
+              className="btn btn-outline btn-small"
+              href={`/?${new URLSearchParams({ ...params, page: String(Math.min(totalPages, page + 1)) } as Record<string, string>).toString()}`}
+            >
+              Next
+            </Link>
+          </div>
         </div>
-      </section>
 
-      <section className="card">
-        <h2>Table Reachability And Row Counts</h2>
-        <div className="grid" style={{ gap: "0.5rem" }}>
-          {tableChecks.map((item) => (
-            <div key={item.table} className="card" style={{ boxShadow: "none", padding: "0.75rem" }}>
-              <p style={{ margin: 0, fontFamily: "monospace" }}>
-                {item.table}
-              </p>
-              {item.ok ? (
-                <p style={{ margin: "0.35rem 0 0", color: "#157347" }}>
-                  OK - row count: {item.count}
-                </p>
-              ) : (
-                <p style={{ margin: "0.35rem 0 0", color: "#a33" }}>
-                  ERROR - {item.error}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
+        <aside className="card">
+          <h2>Learning Announcements</h2>
+          <div className="grid" style={{ gap: "0.8rem" }}>
+            {announcements.map((item) => (
+              <article key={item.post_id} className="card" style={{ boxShadow: "none" }}>
+                <h3>{item.post_title}</h3>
+                <p className="muted">{item.category || "General"}</p>
+              </article>
+            ))}
+          </div>
+          <div style={{ marginTop: "1rem" }}>
+            <Link href="/learn" className="btn btn-outline btn-small">
+              Open Learning Hub
+            </Link>
+          </div>
+        </aside>
       </section>
-
-      {connectionErrorStack ? (
-        <section className="card">
-          <h2>Connection Error Stack</h2>
-          <pre style={{ whiteSpace: "pre-wrap", margin: 0, fontSize: "0.8rem" }}>{connectionErrorStack}</pre>
-        </section>
-      ) : null}
     </div>
   );
 }
