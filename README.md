@@ -7,7 +7,8 @@ This folder contains the migrated architecture from the original PHP codebase to
 - Next.js 16 (App Router)
 - React 19
 - TypeScript
-- MySQL via mysql2
+- PostgreSQL via pg (primary)
+- MySQL via mysql2 (fallback)
 - JWT cookie sessions via jose
 - Zod validation
 
@@ -71,6 +72,16 @@ Commands:
 Set these Environment Variables in your Vercel project:
 
 - SESSION_SECRET: minimum 32 characters
+- POSTGRES_URL: preferred for Vercel Postgres or Supabase Postgres
+
+Optional Postgres alternatives accepted by the app:
+
+- POSTGRES_PRISMA_URL
+- POSTGRES_URL_NON_POOLING
+- DATABASE_URL (must use postgres:// or postgresql://)
+
+If you want MySQL instead of Postgres, set this first:
+
 - RAKETGO_DATABASE_URL: preferred single MySQL connection string
 
 If you are not using RAKETGO_DATABASE_URL, set all of these instead:

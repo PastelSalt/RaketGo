@@ -13,6 +13,7 @@ const globalForDb = globalThis as unknown as {
 const ENABLED_ENV_VALUES = new Set(["1", "true", "yes", "on", "required"]);
 const DISABLED_ENV_VALUES = new Set(["0", "false", "no", "off"]);
 const POSTGRES_PROTOCOLS = new Set(["postgres:", "postgresql:"]);
+const MYSQL_PROTOCOLS = new Set(["mysql:", "mariadb:"]);
 
 function toNumberOrDefault(value: string | undefined, fallback: number): number {
   const parsed = Number(value ?? fallback);
@@ -34,6 +35,18 @@ function isPostgresUrl(value: string | undefined): boolean {
 
   try {
     return POSTGRES_PROTOCOLS.has(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
+function isMysqlUrl(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    return MYSQL_PROTOCOLS.has(new URL(value).protocol);
   } catch {
     return false;
   }
@@ -75,10 +88,24 @@ function resolveMysqlPoolConfig(): MySqlPoolOptions {
     ssl: resolveMysqlSsl()
   };
 
-  const databaseUrl =
-    process.env.RAKETGO_DATABASE_URL ?? process.env.DATABASE_URL ?? process.env.MYSQL_URL;
+  const mysqlUrlCandidates = [
+    process.env.RAKETGO_DATABASE_URL,
+    process.env.MYSQL_URL,
+    process.env.DATABASE_URL
+  ];
 
-  if (databaseUrl && !isPostgresUrl(databaseUrl)) {
+  const databaseUrl = mysqlUrlCandidates.find((value) => isMysqlUrl(value));
+  const hasUnsupportedDatabaseUrl = mysqlUrlCandidates.some(
+    (value) => Boolean(value) && !isMysqlUrl(value) && !isPostgresUrl(value)
+  );
+
+  if (hasUnsupportedDatabaseUrl) {
+    console.error(
+      "DATABASE_URL must use postgres://, postgresql://, mysql://, or mariadb://. Falling back to RAKETGO_DB_* variables."
+    );
+  }
+
+  if (databaseUrl) {
     try {
       const parsed = new URL(databaseUrl);
       return {
@@ -90,7 +117,9 @@ function resolveMysqlPoolConfig(): MySqlPoolOptions {
         database: decodeURIComponent(parsed.pathname.replace(/^\//, ""))
       };
     } catch {
-      console.error("Invalid MySQL database URL. Check RAKETGO_DATABASE_URL or MYSQL_URL.");
+      console.error(
+        "Invalid MySQL database URL. Check RAKETGO_DATABASE_URL, MYSQL_URL, or DATABASE_URL."
+      );
     }
   }
 

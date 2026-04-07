@@ -114,15 +114,21 @@ export default async function HomePage({
     categories = await queryRows<{ job_category: string | null }>(
       "SELECT DISTINCT job_category FROM job_posts WHERE job_category IS NOT NULL AND job_category != '' ORDER BY job_category ASC"
     );
-
-    announcements = await queryRows<
-      Array<{ post_id: number; post_title: string; category: string | null; created_at: string }>
-    >(
-      "SELECT post_id, post_title, category, created_at FROM skill_posts ORDER BY is_featured DESC, created_at DESC LIMIT 5"
-    );
   } catch (error) {
     hasDataError = true;
     console.error("Failed to load homepage data.", error);
+  }
+
+  if (!hasDataError) {
+    try {
+      announcements = await queryRows<
+        Array<{ post_id: number; post_title: string; category: string | null; created_at: string }>
+      >(
+        "SELECT post_id, post_title, category, created_at FROM skill_posts ORDER BY is_featured DESC, created_at DESC LIMIT 5"
+      );
+    } catch (error) {
+      console.error("Failed to load homepage announcements.", error);
+    }
   }
 
   return (
@@ -158,7 +164,7 @@ export default async function HomePage({
         </form>
         <p className="muted">{total} jobs found</p>
         {hasDataError ? (
-          <p className="muted">Data source is currently unavailable. Check your Vercel database environment variables.</p>
+          <p className="muted">Data source is currently unavailable. Check database environment variables and verify schema setup.</p>
         ) : null}
       </section>
 
