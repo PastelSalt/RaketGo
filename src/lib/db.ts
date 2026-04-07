@@ -14,6 +14,7 @@ const ENABLED_ENV_VALUES = new Set(["1", "true", "yes", "on", "required"]);
 const DISABLED_ENV_VALUES = new Set(["0", "false", "no", "off"]);
 const POSTGRES_PROTOCOLS = new Set(["postgres:", "postgresql:"]);
 const MYSQL_PROTOCOLS = new Set(["mysql:", "mariadb:"]);
+const POSTGRES_SSLMODE_ALIAS_VALUES = new Set(["prefer", "require", "verify-ca"]);
 
 function toNumberOrDefault(value: string | undefined, fallback: number): number {
   const parsed = Number(value ?? fallback);
@@ -49,6 +50,42 @@ function isMysqlUrl(value: string | undefined): boolean {
     return MYSQL_PROTOCOLS.has(new URL(value).protocol);
   } catch {
     return false;
+  }
+}
+
+function getPostgresSslMode(value: string | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value);
+    const sslmode = parsed.searchParams.get("sslmode")?.trim().toLowerCase();
+    return sslmode && sslmode.length ? sslmode : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizePostgresConnectionString(value: string | undefined): string | undefined {
+  if (!value) {
+    return value;
+  }
+
+  try {
+    const parsed = new URL(value);
+    const sslmode = parsed.searchParams.get("sslmode")?.trim().toLowerCase();
+    const hasLibpqCompatFlag = parsed.searchParams.has("uselibpqcompat");
+
+    // pg-connection-string warns for these sslmode values unless uselibpqcompat is explicit.
+    if (sslmode && POSTGRES_SSLMODE_ALIAS_VALUES.has(sslmode) && !hasLibpqCompatFlag) {
+      parsed.searchParams.set("uselibpqcompat", "true");
+      return parsed.toString();
+    }
+
+    return value;
+  } catch {
+    return value;
   }
 }
 
@@ -155,7 +192,8 @@ function resolveMysqlPoolConfig(): MySqlPoolOptions {
 }
 
 function resolvePostgresPoolConfig(): PgPoolConfig {
-  const connectionString = getPostgresConnectionString();
+  const connectionString = normalizePostgresConnectionString(getPostgresConnectionString());
+  const sslModeFromUrl = getPostgresSslMode(connectionString);
   const maxConnections = toNumberOrDefault(process.env.POSTGRES_MAX_CONNECTIONS, 10);
   const rejectUnauthorizedSetting =
     process.env.POSTGRES_SSL_REJECT_UNAUTHORIZED ?? process.env.RAKETGO_DB_SSL_REJECT_UNAUTHORIZED;
@@ -168,18 +206,11 @@ function resolvePostgresPoolConfig(): PgPoolConfig {
   const sslExplicitlyEnabled =
     isEnabled(process.env.POSTGRES_SSL) || isEnabled(process.env.RAKETGO_DB_SSL);
 
-  const sslRequiredFromUrl = (() => {
-    if (!connectionString) {
-      return false;
-    }
-
-    try {
-      const parsed = new URL(connectionString);
-      return parsed.searchParams.get("sslmode") === "require";
-    } catch {
-      return false;
-    }
-  })();
+  const sslRequiredFromUrl =
+    sslModeFromUrl === "prefer" ||
+    sslModeFromUrl === "require" ||
+    sslModeFromUrl === "verify-ca" ||
+    sslModeFromUrl === "verify-full";
 
   // Hosted Postgres providers (including Supabase) generally require SSL.
   // Default to SSL unless explicitly disabled.
