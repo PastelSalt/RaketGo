@@ -52,6 +52,27 @@ function isMysqlUrl(value: string | undefined): boolean {
   }
 }
 
+function isSupabaseHost(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+
+  const host = value.trim().toLowerCase();
+  return host.endsWith(".supabase.co") || host.endsWith(".supabase.com");
+}
+
+function isSupabaseConnectionString(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    return isSupabaseHost(new URL(value).hostname);
+  } catch {
+    return false;
+  }
+}
+
 function getPostgresConnectionString(): string | undefined {
   return (
     process.env.POSTGRES_URL ??
@@ -136,9 +157,13 @@ function resolveMysqlPoolConfig(): MySqlPoolOptions {
 function resolvePostgresPoolConfig(): PgPoolConfig {
   const connectionString = getPostgresConnectionString();
   const maxConnections = toNumberOrDefault(process.env.POSTGRES_MAX_CONNECTIONS, 10);
-  const rejectUnauthorized = !isDisabled(
-    process.env.POSTGRES_SSL_REJECT_UNAUTHORIZED ?? process.env.RAKETGO_DB_SSL_REJECT_UNAUTHORIZED
-  );
+  const rejectUnauthorizedSetting =
+    process.env.POSTGRES_SSL_REJECT_UNAUTHORIZED ?? process.env.RAKETGO_DB_SSL_REJECT_UNAUTHORIZED;
+  const supabaseConnectionDetected =
+    isSupabaseConnectionString(connectionString) || isSupabaseHost(process.env.POSTGRES_HOST);
+  const rejectUnauthorized = rejectUnauthorizedSetting
+    ? !isDisabled(rejectUnauthorizedSetting)
+    : !supabaseConnectionDetected;
   const sslExplicitlyDisabled = isDisabled(process.env.POSTGRES_SSL);
   const sslExplicitlyEnabled =
     isEnabled(process.env.POSTGRES_SSL) || isEnabled(process.env.RAKETGO_DB_SSL);
@@ -158,6 +183,8 @@ function resolvePostgresPoolConfig(): PgPoolConfig {
 
   // Hosted Postgres providers (including Supabase) generally require SSL.
   // Default to SSL unless explicitly disabled.
+  // For Supabase hosts, default rejectUnauthorized to false to avoid runtime
+  // certificate chain failures unless explicitly configured.
   const sslEnabled =
     !sslExplicitlyDisabled &&
     (sslRequiredFromUrl || sslExplicitlyEnabled || Boolean(connectionString) || Boolean(process.env.POSTGRES_HOST));
