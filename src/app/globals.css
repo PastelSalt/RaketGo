@@ -164,6 +164,22 @@
     @apply inline-flex items-center justify-center rounded-full border-2 border-brand-red bg-brand-red px-3 py-1 text-xs font-semibold text-brand-ink;
   }
 
+  .filter-chip {
+    @apply inline-flex items-center justify-center rounded-full border-2 border-brand-blue bg-white px-3 py-1 text-xs font-semibold text-brand-ink transition-colors;
+  }
+
+  .filter-chip:hover {
+    @apply bg-brand-blue;
+  }
+
+  .filter-chip-active {
+    @apply border-brand-red-strong bg-brand-red;
+  }
+
+  .filter-chip-active:hover {
+    @apply bg-brand-red;
+  }
+
   .stat-card {
     @apply rounded-3xl border-2 border-brand-blue bg-brand-blue p-4;
     animation: fade-up 360ms ease-out;
