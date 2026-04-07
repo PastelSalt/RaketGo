@@ -99,7 +99,8 @@
   }
 
   .grid {
-    @apply grid gap-4;
+    display: grid;
+    gap: 1rem;
   }
 
   .grid-2 {
