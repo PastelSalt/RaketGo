@@ -27,6 +27,16 @@ export async function Footer() {
                 Learn
               </Link>
             </li>
+            <li>
+              <Link href="/about" className="footer-link">
+                About
+              </Link>
+            </li>
+            <li>
+              <Link href="/help" className="footer-link">
+                Help Tutorial
+              </Link>
+            </li>
             {user ? (
               <>
                 <li>
@@ -71,11 +81,28 @@ export async function Footer() {
         </div>
         <div>
           <h4 className="text-sm font-bold uppercase tracking-[0.14em] text-brand-ink">Help</h4>
-          <p className="muted leading-6">
-            Browse jobs, post opportunities, and track applications in one
-            workflow. Workers can manage skills, while employers can review
-            candidates from their dashboard.
-          </p>
+          <ul>
+            <li>
+              <Link href="/help" className="footer-link">
+                Getting Started Guide
+              </Link>
+            </li>
+            <li>
+              <Link href="/help" className="footer-link">
+                Worker Tutorial
+              </Link>
+            </li>
+            <li>
+              <Link href="/help" className="footer-link">
+                Employer Tutorial
+              </Link>
+            </li>
+            <li>
+              <Link href="/about" className="footer-link">
+                About Moesoft
+              </Link>
+            </li>
+          </ul>
         </div>
       </div>
       <div className="footer-bottom">{new Date().getFullYear()} RaketGo by Moesoft</div>

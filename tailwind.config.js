@@ -9,12 +9,12 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          blue: "#D7EBFA",
-          "blue-strong": "#B5D8F2",
-          red: "#F6CDD8",
-          "red-strong": "#ECAEC0",
-          ink: "#4E7A9A",
-          "ink-soft": "#6D98B5"
+          blue: "#A8C9DE",
+          "blue-strong": "#86B1CA",
+          red: "#DFA8B8",
+          "red-strong": "#C98EA0",
+          ink: "#395C74",
+          "ink-soft": "#55748A"
         }
       }
     }

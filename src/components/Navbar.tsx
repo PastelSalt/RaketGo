@@ -35,6 +35,12 @@ export async function Navbar() {
           <Link href="/learn" className="nav-pill">
             Learn
           </Link>
+          <Link href="/about" className="nav-pill">
+            About
+          </Link>
+          <Link href="/help" className="nav-pill">
+            Help
+          </Link>
 
           {user ? (
             <>

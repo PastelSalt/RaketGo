@@ -33,7 +33,7 @@
   }
 
   .site-header {
-    @apply sticky top-0 z-20 border-b-2 border-brand-blue bg-white;
+    @apply sticky top-0 z-20 border-b border-brand-blue-strong bg-white;
   }
 
   .nav-shell {
@@ -54,7 +54,7 @@
   }
 
   .nav-pill {
-    @apply inline-flex items-center rounded-full border-2 border-brand-blue bg-white px-3 py-1.5 transition-colors hover:bg-brand-blue;
+    @apply inline-flex items-center rounded-full border border-brand-blue-strong bg-white px-3 py-1.5 transition-colors hover:bg-brand-blue;
   }
 
   .notification-link {
@@ -62,11 +62,11 @@
   }
 
   .badge {
-    @apply inline-flex min-h-6 min-w-6 items-center justify-center rounded-full border-2 border-brand-red-strong bg-brand-red-strong px-2 text-xs font-bold text-white;
+    @apply inline-flex min-h-6 min-w-6 items-center justify-center rounded-full border border-brand-red-strong bg-brand-red-strong px-2 text-xs font-bold text-white;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center rounded-xl border-2 px-4 py-2 text-sm font-semibold transition-colors;
+    @apply inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold transition-colors;
   }
 
   .btn:disabled {
@@ -98,7 +98,7 @@
   }
 
   .card {
-    @apply rounded-3xl border-2 border-brand-blue bg-white p-5;
+    @apply rounded-2xl border border-brand-blue-strong bg-white p-5;
     animation: fade-up 360ms ease-out;
   }
 
@@ -107,7 +107,7 @@
   }
 
   .sub-card {
-    @apply rounded-2xl border-2 border-brand-blue bg-brand-blue p-4;
+    @apply rounded-xl border border-brand-blue-strong bg-brand-blue p-4;
   }
 
   .sub-card-active {
@@ -115,7 +115,7 @@
   }
 
   .empty-state {
-    @apply rounded-2xl border-2 border-dashed border-brand-blue bg-white px-4 py-5 text-center text-sm text-brand-ink-soft;
+    @apply rounded-xl border border-dashed border-brand-blue-strong bg-white px-4 py-5 text-center text-sm text-brand-ink-soft;
   }
 
   .grid {
@@ -145,7 +145,7 @@
   .stack-form input,
   .stack-form select,
   .stack-form textarea {
-    @apply w-full rounded-xl border-2 border-brand-blue bg-white px-3 py-2 text-sm text-brand-ink placeholder:text-brand-ink-soft focus:border-brand-red focus:outline-none;
+    @apply w-full rounded-xl border border-brand-blue-strong bg-white px-3 py-2 text-sm text-brand-ink placeholder:text-brand-ink-soft focus:border-brand-red-strong focus:outline-none;
   }
 
   .stack-form {
@@ -161,11 +161,11 @@
   }
 
   .tag {
-    @apply inline-flex items-center justify-center rounded-full border-2 border-brand-red bg-brand-red px-3 py-1 text-xs font-semibold text-brand-ink;
+    @apply inline-flex items-center justify-center rounded-full border border-brand-red-strong bg-brand-red px-3 py-1 text-xs font-semibold text-brand-ink;
   }
 
   .filter-chip {
-    @apply inline-flex items-center justify-center rounded-full border-2 border-brand-blue bg-white px-3 py-1 text-xs font-semibold text-brand-ink transition-colors;
+    @apply inline-flex items-center justify-center rounded-full border border-brand-blue-strong bg-white px-3 py-1 text-xs font-semibold text-brand-ink transition-colors;
   }
 
   .filter-chip:hover {
@@ -173,7 +173,7 @@
   }
 
   .filter-chip-active {
-    @apply border-brand-red-strong bg-brand-red;
+    @apply border-brand-red-strong bg-brand-red text-brand-ink;
   }
 
   .filter-chip-active:hover {
@@ -181,7 +181,7 @@
   }
 
   .stat-card {
-    @apply rounded-3xl border-2 border-brand-blue bg-brand-blue p-4;
+    @apply rounded-2xl border border-brand-blue-strong bg-brand-blue p-4;
     animation: fade-up 360ms ease-out;
   }
 
@@ -190,7 +190,7 @@
   }
 
   .site-footer {
-    @apply border-t-2 border-brand-blue bg-white;
+    @apply border-t border-brand-blue-strong bg-white;
   }
 
   .footer-grid {
@@ -206,7 +206,7 @@
   }
 
   .footer-bottom {
-    @apply border-t-2 border-brand-blue py-3 text-center text-sm text-brand-ink-soft;
+    @apply border-t border-brand-blue-strong py-3 text-center text-sm text-brand-ink-soft;
   }
 
   .message-shell {
@@ -218,7 +218,7 @@
   }
 
   .message-bubble {
-    @apply max-w-[90%] rounded-2xl border-2 border-brand-blue p-3;
+    @apply max-w-[90%] rounded-2xl border border-brand-blue-strong p-3;
   }
 
   .message-bubble.mine {
@@ -234,7 +234,7 @@
   }
 
   .alert {
-    @apply mb-3 rounded-xl border-2 px-3 py-2 text-sm font-medium;
+    @apply mb-3 rounded-xl border px-3 py-2 text-sm font-medium;
   }
 
   .alert-error {
@@ -267,69 +267,26 @@
   }
 
   .aura-one {
-    width: 280px;
-    height: 280px;
+    width: 220px;
+    height: 220px;
     left: -100px;
     top: 120px;
   }
 
   .aura-two {
-    width: 220px;
-    height: 220px;
+    width: 180px;
+    height: 180px;
     right: -80px;
     bottom: 140px;
   }
 
-  .petal {
-    @apply absolute h-4 w-4 rounded-[12px_0] bg-brand-red;
-    opacity: 1;
-    animation: float-down 16s linear infinite;
+  .aura-three {
+    width: 110px;
+    height: 110px;
+    left: 60%;
+    top: 70%;
   }
 
-  .petal-a {
-    left: 12%;
-    top: -10%;
-    animation-duration: 18s;
-  }
-
-  .petal-b {
-    left: 52%;
-    top: -8%;
-    animation-duration: 15s;
-  }
-
-  .petal-c {
-    left: 82%;
-    top: -12%;
-    animation-duration: 20s;
-  }
-
-  .petal-d {
-    left: 30%;
-    top: -16%;
-    animation-duration: 17s;
-  }
-
-  .petal-e {
-    left: 67%;
-    top: -6%;
-    animation-duration: 19s;
-  }
-
-  .petal-f {
-    left: 92%;
-    top: -14%;
-    animation-duration: 21s;
-  }
-}
-
-@keyframes float-down {
-  0% {
-    transform: translateY(0) rotate(0deg);
-  }
-  100% {
-    transform: translateY(120vh) rotate(360deg);
-  }
 }
 
 @keyframes fade-up {
