@@ -14,15 +14,15 @@ export default async function AdminDashboardPage() {
   }
 
   const [userStats] = await queryRows<{ workers: number; employers: number; total: number }>(
-    "SELECT COUNT(*) AS total, SUM(user_type = 'worker') AS workers, SUM(user_type = 'employer') AS employers FROM users"
+    "SELECT COUNT(*) AS total, SUM(CASE WHEN user_type = 'worker' THEN 1 ELSE 0 END) AS workers, SUM(CASE WHEN user_type = 'employer' THEN 1 ELSE 0 END) AS employers FROM users"
   );
 
   const [jobStats] = await queryRows<{ total_jobs: number; active_jobs: number; in_progress_jobs: number }>(
-    "SELECT COUNT(*) AS total_jobs, SUM(job_status = 'active') AS active_jobs, SUM(job_status = 'in_progress') AS in_progress_jobs FROM job_posts"
+    "SELECT COUNT(*) AS total_jobs, SUM(CASE WHEN job_status = 'active' THEN 1 ELSE 0 END) AS active_jobs, SUM(CASE WHEN job_status = 'in_progress' THEN 1 ELSE 0 END) AS in_progress_jobs FROM job_posts"
   );
 
   const [appStats] = await queryRows<{ total_apps: number; approved_apps: number; pending_apps: number }>(
-    "SELECT COUNT(*) AS total_apps, SUM(application_status = 'approved') AS approved_apps, SUM(application_status = 'pending') AS pending_apps FROM job_applications"
+    "SELECT COUNT(*) AS total_apps, SUM(CASE WHEN application_status = 'approved' THEN 1 ELSE 0 END) AS approved_apps, SUM(CASE WHEN application_status = 'pending' THEN 1 ELSE 0 END) AS pending_apps FROM job_applications"
   );
 
   const [skillPosts] = await queryRows<{ total_posts: number }>(

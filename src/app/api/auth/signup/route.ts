@@ -65,7 +65,10 @@ export async function POST(request: Request) {
 
   if (parsed.data.user_type === "worker" && parsed.data.skills.length) {
     for (const skill of parsed.data.skills) {
-      await execute("INSERT IGNORE INTO user_skills (user_id, skill_name) VALUES (?, ?)", [created.insertId, skill]);
+      await execute(
+        "INSERT INTO user_skills (user_id, skill_name) VALUES (?, ?) ON CONFLICT (user_id, skill_name) DO NOTHING",
+        [created.insertId, skill]
+      );
     }
   }
 

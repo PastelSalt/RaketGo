@@ -16,10 +16,10 @@ async function hasRateLimitTable(): Promise<boolean> {
   }
 
   checkedTable = true;
-  const rows = await queryRows<{ [key: string]: string }>(
-    "SHOW TABLES LIKE 'auth_rate_limits'"
+  const rows = await queryRows<Array<{ table_exists: boolean | number }>>(
+    "SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END AS table_exists FROM information_schema.tables WHERE table_name = 'auth_rate_limits'"
   );
-  rateLimitTableExists = rows.length > 0;
+  rateLimitTableExists = Boolean(rows[0]?.table_exists);
   return rateLimitTableExists;
 }
 
@@ -100,18 +100,35 @@ export async function registerRateLimitFailure(
   const windowExpired = windowStarted + windowSeconds * 1000 < now;
   const attempts = windowExpired ? 1 : Number(rows[0].attempts) + 1;
   const shouldLock = attempts >= maxAttempts;
+  const lockUntil = new Date(now + lockSeconds * 1000).toISOString();
 
   if (shouldLock) {
+    if (windowExpired) {
+      await execute(
+        "UPDATE auth_rate_limits SET attempts = ?, window_started_at = NOW(), last_attempt_at = NOW(), locked_until = ? WHERE throttle_key = ?",
+        [attempts, lockUntil, key]
+      );
+    } else {
+      await execute(
+        "UPDATE auth_rate_limits SET attempts = ?, last_attempt_at = NOW(), locked_until = ? WHERE throttle_key = ?",
+        [attempts, lockUntil, key]
+      );
+    }
+
+    return;
+  }
+
+  if (windowExpired) {
     await execute(
-      "UPDATE auth_rate_limits SET attempts = ?, window_started_at = IF(? = 1, NOW(), window_started_at), last_attempt_at = NOW(), locked_until = DATE_ADD(NOW(), INTERVAL ? SECOND) WHERE throttle_key = ?",
-      [attempts, windowExpired ? 1 : 0, lockSeconds, key]
+      "UPDATE auth_rate_limits SET attempts = ?, window_started_at = NOW(), last_attempt_at = NOW(), locked_until = NULL WHERE throttle_key = ?",
+      [attempts, key]
     );
     return;
   }
 
   await execute(
-    "UPDATE auth_rate_limits SET attempts = ?, window_started_at = IF(? = 1, NOW(), window_started_at), last_attempt_at = NOW(), locked_until = NULL WHERE throttle_key = ?",
-    [attempts, windowExpired ? 1 : 0, key]
+    "UPDATE auth_rate_limits SET attempts = ?, last_attempt_at = NOW(), locked_until = NULL WHERE throttle_key = ?",
+    [attempts, key]
   );
 }
 

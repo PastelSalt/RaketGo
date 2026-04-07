@@ -9,7 +9,7 @@ export async function Navbar() {
   if (user) {
     try {
       const rows = await queryRows<{ count: number }>(
-        "SELECT COUNT(*) AS count FROM notifications WHERE user_id = ? AND is_read = 0",
+        "SELECT COUNT(*) AS count FROM notifications WHERE user_id = ? AND is_read = FALSE",
         [user.userId]
       );
       unreadCount = Number(rows[0]?.count ?? 0);

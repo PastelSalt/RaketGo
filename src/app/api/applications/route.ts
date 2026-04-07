@@ -44,8 +44,8 @@ export async function POST(request: Request) {
 
   if (action === "save") {
     await execute(
-      "INSERT IGNORE INTO user_interactions (user_id, interaction_type, job_id) VALUES (?, 'save', ?)",
-      [session.userId, jobId]
+      "INSERT INTO user_interactions (user_id, interaction_type, job_id) SELECT ?, 'save', ? WHERE NOT EXISTS (SELECT 1 FROM user_interactions WHERE user_id = ? AND interaction_type = 'save' AND job_id = ?)",
+      [session.userId, jobId, session.userId, jobId]
     );
     return jobRedirect(request, jobId, "success", "Job saved.");
   }

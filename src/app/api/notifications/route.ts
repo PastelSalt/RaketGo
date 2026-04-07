@@ -15,7 +15,7 @@ export async function GET() {
       notification_type: string;
       title: string;
       message: string;
-      is_read: number;
+      is_read: number | boolean;
       action_url: string | null;
       created_at: string;
     }>
@@ -40,12 +40,12 @@ export async function POST(request: Request) {
     const notificationId = Number(formData.get("notification_id") ?? 0);
     if (notificationId > 0) {
       await execute(
-        "UPDATE notifications SET is_read = 1, read_at = NOW() WHERE notification_id = ? AND user_id = ?",
+        "UPDATE notifications SET is_read = TRUE, read_at = NOW() WHERE notification_id = ? AND user_id = ?",
         [notificationId, session.userId]
       );
     }
   } else if (action === "mark_all_read") {
-    await execute("UPDATE notifications SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0", [
+    await execute("UPDATE notifications SET is_read = TRUE, read_at = NOW() WHERE user_id = ? AND is_read = FALSE", [
       session.userId
     ]);
   }

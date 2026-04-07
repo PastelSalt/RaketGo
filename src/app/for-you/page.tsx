@@ -18,14 +18,14 @@ export default async function ForYouPage() {
   const trendingJobs = await queryRows<
     Array<{ job_id: number; job_title: string; location_city: string; location_region: string; pay_amount: number; pay_type: string; job_status: string; employer_name: string; created_at: string; interaction_count: number }>
   >(
-    "SELECT j.job_id, j.job_title, j.location_city, j.location_region, j.pay_amount, j.pay_type, j.job_status, j.created_at, u.full_name AS employer_name, COUNT(ui.interaction_id) AS interaction_count FROM job_posts j JOIN users u ON j.employer_id = u.user_id LEFT JOIN user_interactions ui ON ui.job_id = j.job_id AND ui.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) WHERE j.job_status = 'active' GROUP BY j.job_id, j.job_title, j.location_city, j.location_region, j.pay_amount, j.pay_type, j.job_status, j.created_at, u.full_name ORDER BY interaction_count DESC, j.created_at DESC LIMIT 6"
+    "SELECT j.job_id, j.job_title, j.location_city, j.location_region, j.pay_amount, j.pay_type, j.job_status, j.created_at, u.full_name AS employer_name, COUNT(ui.interaction_id) AS interaction_count FROM job_posts j JOIN users u ON j.employer_id = u.user_id LEFT JOIN user_interactions ui ON ui.job_id = j.job_id AND ui.created_at >= NOW() - INTERVAL '7 days' WHERE j.job_status = 'active' GROUP BY j.job_id, j.job_title, j.location_city, j.location_region, j.pay_amount, j.pay_type, j.job_status, j.created_at, u.full_name ORDER BY interaction_count DESC, j.created_at DESC LIMIT 6"
   );
 
   if (user?.user_type === "worker") {
     const recommendedJobs = await queryRows<
       Array<{ job_id: number; job_title: string; location_city: string; location_region: string; pay_amount: number; pay_type: string; job_status: string; employer_name: string; created_at: string; match_score: number }>
     >(
-      "SELECT DISTINCT j.job_id, j.job_title, j.location_city, j.location_region, j.pay_amount, j.pay_type, j.job_status, j.created_at, u.full_name AS employer_name, ((SELECT COUNT(*) FROM user_skills us WHERE us.user_id = ? AND j.required_skills LIKE CONCAT('%', us.skill_name, '%')) * 3 + CASE WHEN j.location_region = ? THEN 2 ELSE 0 END + CASE WHEN j.location_city = ? THEN 1 ELSE 0 END + IFNULL(u.trust_score, 0)) AS match_score FROM job_posts j JOIN users u ON j.employer_id = u.user_id WHERE j.job_status = 'active' AND j.employer_id != ? AND j.job_id NOT IN (SELECT job_id FROM job_applications WHERE worker_id = ?) ORDER BY match_score DESC, j.created_at DESC LIMIT 15",
+      "SELECT DISTINCT j.job_id, j.job_title, j.location_city, j.location_region, j.pay_amount, j.pay_type, j.job_status, j.created_at, u.full_name AS employer_name, ((SELECT COUNT(*) FROM user_skills us WHERE us.user_id = ? AND j.required_skills LIKE ('%' || us.skill_name || '%')) * 3 + CASE WHEN j.location_region = ? THEN 2 ELSE 0 END + CASE WHEN j.location_city = ? THEN 1 ELSE 0 END + COALESCE(u.trust_score, 0)) AS match_score FROM job_posts j JOIN users u ON j.employer_id = u.user_id WHERE j.job_status = 'active' AND j.employer_id != ? AND j.job_id NOT IN (SELECT job_id FROM job_applications WHERE worker_id = ?) ORDER BY match_score DESC, j.created_at DESC LIMIT 15",
       [session.userId, user.region, user.city, session.userId, session.userId]
     );
 
@@ -97,8 +97,8 @@ export default async function ForYouPage() {
     const placeholders = allSkills.map(() => "?").join(",");
     recommendedWorkers = await queryRows<typeof recommendedWorkers>(
       `SELECT DISTINCT u.user_id, u.full_name, u.city, u.province, u.trust_score,
-              (SELECT COUNT(*) FROM user_skills us2 WHERE us2.user_id = u.user_id AND us2.is_verified = 1) AS verified_skills_count,
-              GROUP_CONCAT(us.skill_name ORDER BY us.skill_name ASC SEPARATOR ', ') AS matched_skills
+              (SELECT COUNT(*) FROM user_skills us2 WHERE us2.user_id = u.user_id AND us2.is_verified = TRUE) AS verified_skills_count,
+              STRING_AGG(us.skill_name, ', ' ORDER BY us.skill_name ASC) AS matched_skills
        FROM users u
        JOIN user_skills us ON u.user_id = us.user_id
        WHERE u.user_type = 'worker' AND us.skill_name IN (${placeholders})
