@@ -1,0 +1,72 @@
+import { redirect } from "next/navigation";
+import { NotificationItem } from "@/components/NotificationItem";
+import { getSessionUser } from "@/lib/auth";
+import { queryRows } from "@/lib/db";
+
+type SearchParams = {
+  success?: string;
+};
+
+export default async function NotificationsPage({
+  searchParams
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const session = await getSessionUser();
+  if (!session) {
+    redirect("/login?redirect=/notifications");
+  }
+
+  const params = await searchParams;
+
+  const notifications = await queryRows<
+    Array<{
+      notification_id: number;
+      notification_type: string;
+      title: string;
+      message: string;
+      is_read: number;
+      action_url: string | null;
+      created_at: string;
+    }>
+  >(
+    "SELECT notification_id, notification_type, title, message, is_read, action_url, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
+    [session.userId]
+  );
+
+  return (
+    <div className="grid" style={{ gap: "1rem" }}>
+      <section className="card">
+        <h1 className="page-title">Notifications</h1>
+        {params.success ? <div className="alert alert-success">{decodeURIComponent(params.success)}</div> : null}
+        <form action="/api/notifications" method="post">
+          <input type="hidden" name="action" value="mark_all_read" />
+          <button className="btn btn-outline btn-small" type="submit">
+            Mark All Read
+          </button>
+        </form>
+      </section>
+
+      <section className="grid" style={{ gap: "0.8rem" }}>
+        {notifications.length ? (
+          notifications.map((item) => (
+            <div key={item.notification_id}>
+              <NotificationItem item={item} />
+              {!item.is_read ? (
+                <form action="/api/notifications" method="post" style={{ marginTop: "0.4rem" }}>
+                  <input type="hidden" name="action" value="mark_read" />
+                  <input type="hidden" name="notification_id" value={item.notification_id} />
+                  <button className="btn btn-outline btn-small" type="submit">
+                    Mark Read
+                  </button>
+                </form>
+              ) : null}
+            </div>
+          ))
+        ) : (
+          <p className="muted">No notifications yet.</p>
+        )}
+      </section>
+    </div>
+  );
+}
