@@ -209,8 +209,16 @@ export default async function HomePage({
       ([key, value]) => !(key === "page" && value === "1")
     );
 
-    const query = new URLSearchParams(normalizedEntries).toString();
-    return query ? `/?${query}` : "/";
+    const queryObject = Object.fromEntries(normalizedEntries) as Record<string, string>;
+
+    if (Object.keys(queryObject).length === 0) {
+      return { pathname: "/" };
+    }
+
+    return {
+      pathname: "/",
+      query: queryObject
+    };
   };
 
   const activeFilters: string[] = [];
