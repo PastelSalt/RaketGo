@@ -40,7 +40,7 @@ export async function Navbar() {
                 Notifications
                 {unreadCount > 0 ? <span className="badge">{unreadCount}</span> : null}
               </Link>
-              <Link href={roleHomePath(user.userType)}>
+              <Link href={roleHomePath(user.userType) as any}>
                 {user.userType === "admin" ? "Admin" : "Dashboard"}
               </Link>
               <form action="/api/auth/logout" method="post">

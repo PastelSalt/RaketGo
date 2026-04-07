@@ -35,7 +35,7 @@ export async function Footer() {
                   <Link href="/notifications">Notifications</Link>
                 </li>
                 <li>
-                  <Link href={roleHomePath(user.userType)}>
+                  <Link href={roleHomePath(user.userType) as React.ComponentProps<typeof Link>["href"]}>
                     {user.userType === "admin" ? "Admin Dashboard" : "Dashboard"}
                   </Link>
                 </li>
