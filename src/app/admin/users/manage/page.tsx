@@ -18,12 +18,15 @@ export default async function ManageUsersPage() {
   );
 
   return (
-    <section className="card">
-      <h1 className="page-title">Manage Users</h1>
-      <div className="grid" style={{ gap: "0.6rem" }}>
+    <section className="card space-y-4">
+      <div>
+        <h1 className="page-title">Manage Users</h1>
+        <p className="muted">Review the most recent worker and employer accounts.</p>
+      </div>
+      <div className="grid gap-2">
         {users.map((user) => (
-          <article key={user.user_id} className="card" style={{ boxShadow: "none" }}>
-            <strong>{user.full_name}</strong>
+          <article key={user.user_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+            <strong className="text-sm text-brand-ink">{user.full_name}</strong>
             <p className="muted">
               {user.user_type} • {user.mobile_number} • {user.city} • {user.account_status}
             </p>

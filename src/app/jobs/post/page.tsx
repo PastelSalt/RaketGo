@@ -23,9 +23,11 @@ export default async function PostJobPage({
   const params = await searchParams;
 
   return (
-    <section className="card" style={{ maxWidth: "880px", margin: "0 auto" }}>
-      <h1 className="page-title">Post a Job</h1>
-      <p className="muted">Create a new opportunity for workers.</p>
+    <section className="card mx-auto max-w-4xl space-y-4">
+      <div>
+        <h1 className="page-title">Post a Job</h1>
+        <p className="muted">Create a new opportunity for workers.</p>
+      </div>
       {params.error ? <div className="alert alert-error">{decodeURIComponent(params.error)}</div> : null}
       {params.success ? <div className="alert alert-success">{decodeURIComponent(params.success)}</div> : null}
       <JobPostingForm />

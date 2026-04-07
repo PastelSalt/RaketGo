@@ -68,10 +68,13 @@ export default async function LearnPage({
   );
 
   return (
-    <div className="grid" style={{ gap: "1rem" }}>
-      <section className="card">
-        <h1 className="page-title">Skill Learning Hub</h1>
-        <form className="search-form" method="get" style={{ gridTemplateColumns: "1fr 1fr auto" }}>
+    <div className="grid gap-6">
+      <section className="card space-y-4">
+        <div>
+          <h1 className="page-title">Skill Learning Hub</h1>
+          <p className="muted">Explore training resources curated by administrators.</p>
+        </div>
+        <form className="grid gap-2 md:grid-cols-[1fr_1fr_auto]" method="get">
           <select name="type" defaultValue={type}>
             <option value="">All types</option>
             <option value="certification">Certification</option>
@@ -97,12 +100,12 @@ export default async function LearnPage({
       <section className="grid grid-3">
         {posts.length ? (
           posts.map((post) => (
-            <article key={post.post_id} className="card">
-              <h3>{post.post_title}</h3>
+            <article key={post.post_id} className="card space-y-3">
+              <h3 className="text-lg font-semibold tracking-tight text-brand-ink">{post.post_title}</h3>
               <p className="muted">
                 {post.post_type} • {post.category || "General"} • {post.admin_name}
               </p>
-              <p>{post.post_content.slice(0, 160)}...</p>
+              <p className="text-sm leading-6 text-brand-ink">{post.post_content.slice(0, 160)}...</p>
               {post.link_url ? (
                 <a href={post.link_url} target="_blank" rel="noreferrer" className="btn btn-outline btn-small">
                   Open Resource

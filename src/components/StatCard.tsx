@@ -6,7 +6,7 @@ interface StatCardProps {
 export function StatCard({ label, value }: StatCardProps) {
   return (
     <article className="stat-card">
-      <p>{label}</p>
+      <p className="text-sm font-semibold uppercase tracking-[0.12em] text-brand-ink">{label}</p>
       <h3>{value}</h3>
     </article>
   );

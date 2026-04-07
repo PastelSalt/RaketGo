@@ -14,12 +14,12 @@ interface NotificationItemProps {
 
 export function NotificationItem({ item }: NotificationItemProps) {
   return (
-    <article className={`card ${item.is_read ? "" : "card-unread"}`}>
+    <article className={`card space-y-3 ${item.is_read ? "" : "card-unread"}`}>
       <div className="notification-top">
-        <h3>{item.title}</h3>
+        <h3 className="text-lg font-semibold tracking-tight text-brand-ink">{item.title}</h3>
         <span className="tag">{item.notification_type}</span>
       </div>
-      <p>{item.message}</p>
+      <p className="text-sm leading-6 text-brand-ink">{item.message}</p>
       <p className="muted">{timeAgo(item.created_at)}</p>
       {item.action_url ? (
         <a href={item.action_url} className="btn btn-outline btn-small">

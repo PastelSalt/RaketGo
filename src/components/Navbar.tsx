@@ -29,18 +29,26 @@ export async function Navbar() {
         </Link>
 
         <nav className="nav-links">
-          <Link href="/">Home</Link>
-          <Link href="/learn">Learn</Link>
+          <Link href="/" className="nav-pill">
+            Home
+          </Link>
+          <Link href="/learn" className="nav-pill">
+            Learn
+          </Link>
 
           {user ? (
             <>
-              <Link href="/for-you">For You</Link>
-              <Link href="/messages">Messages</Link>
-              <Link href="/notifications" className="notification-link">
+              <Link href="/for-you" className="nav-pill">
+                For You
+              </Link>
+              <Link href="/messages" className="nav-pill">
+                Messages
+              </Link>
+              <Link href="/notifications" className="nav-pill notification-link">
                 Notifications
                 {unreadCount > 0 ? <span className="badge">{unreadCount}</span> : null}
               </Link>
-              <Link href={roleHomePath(user.userType) as any}>
+              <Link href={roleHomePath(user.userType) as any} className="nav-pill">
                 {user.userType === "admin" ? "Admin" : "Dashboard"}
               </Link>
               <form action="/api/auth/logout" method="post">

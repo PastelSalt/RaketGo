@@ -38,8 +38,8 @@ export default async function AdminDashboardPage() {
   );
 
   return (
-    <div className="grid" style={{ gap: "1rem" }}>
-      <section className="card">
+    <div className="grid gap-6">
+      <section className="card space-y-4">
         <h1 className="page-title">Admin Dashboard</h1>
         <div className="grid grid-3">
           <StatCard label="Users" value={userStats?.total ?? 0} />
@@ -52,8 +52,8 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section className="grid grid-2">
-        <article className="card">
-          <h2>Recent Users</h2>
+        <article className="card space-y-2">
+          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Recent Users</h2>
           {recentUsers.map((item) => (
             <p key={item.user_id} className="muted">
               {item.full_name} ({item.user_type}) • {item.city}
@@ -64,8 +64,8 @@ export default async function AdminDashboardPage() {
           </Link>
         </article>
 
-        <article className="card">
-          <h2>Recent Jobs</h2>
+        <article className="card space-y-2">
+          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Recent Jobs</h2>
           {recentJobs.map((item) => (
             <p key={item.job_id} className="muted">
               {item.job_title} • {item.employer_name} • {item.job_status}

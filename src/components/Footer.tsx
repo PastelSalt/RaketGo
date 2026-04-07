@@ -8,34 +8,47 @@ export async function Footer() {
     <footer className="site-footer">
       <div className="container footer-grid">
         <div>
-          <h3>RaketGo</h3>
-          <p>
+          <h3 className="text-lg font-bold tracking-tight text-brand-ink">RaketGo</h3>
+          <p className="muted leading-6">
             Job matching platform for workers, employers, and admins with direct
             communication and recommendation feeds.
           </p>
         </div>
         <div>
-          <h4>Quick Links</h4>
+          <h4 className="text-sm font-bold uppercase tracking-[0.14em] text-brand-ink">Quick Links</h4>
           <ul>
             <li>
-              <Link href="/">Home</Link>
+              <Link href="/" className="nav-pill text-sm">
+                Home
+              </Link>
             </li>
             <li>
-              <Link href="/learn">Learn</Link>
+              <Link href="/learn" className="nav-pill text-sm">
+                Learn
+              </Link>
             </li>
             {user ? (
               <>
                 <li>
-                  <Link href="/for-you">For You</Link>
+                  <Link href="/for-you" className="nav-pill text-sm">
+                    For You
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/messages">Messages</Link>
+                  <Link href="/messages" className="nav-pill text-sm">
+                    Messages
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/notifications">Notifications</Link>
+                  <Link href="/notifications" className="nav-pill text-sm">
+                    Notifications
+                  </Link>
                 </li>
                 <li>
-                  <Link href={roleHomePath(user.userType) as React.ComponentProps<typeof Link>["href"]}>
+                  <Link
+                    href={roleHomePath(user.userType) as React.ComponentProps<typeof Link>["href"]}
+                    className="nav-pill text-sm"
+                  >
                     {user.userType === "admin" ? "Admin Dashboard" : "Dashboard"}
                   </Link>
                 </li>
@@ -43,18 +56,22 @@ export async function Footer() {
             ) : (
               <>
                 <li>
-                  <Link href="/login">Login</Link>
+                  <Link href="/login" className="nav-pill text-sm">
+                    Login
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/signup">Sign Up</Link>
+                  <Link href="/signup" className="nav-pill text-sm">
+                    Sign Up
+                  </Link>
                 </li>
               </>
             )}
           </ul>
         </div>
         <div>
-          <h4>Help</h4>
-          <p>
+          <h4 className="text-sm font-bold uppercase tracking-[0.14em] text-brand-ink">Help</h4>
+          <p className="muted leading-6">
             Browse jobs, post opportunities, and track applications in one
             workflow. Workers can manage skills, while employers can review
             candidates from their dashboard.

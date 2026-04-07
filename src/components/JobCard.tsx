@@ -17,10 +17,12 @@ interface JobCardProps {
 
 export function JobCard({ job }: JobCardProps) {
   return (
-    <article className="card job-card">
+    <article className="card space-y-2">
       <div className="job-card-head">
-        <h3>
-          <Link href={`/jobs/${job.job_id}`}>{job.job_title}</Link>
+        <h3 className="text-lg font-semibold tracking-tight text-brand-ink">
+          <Link href={`/jobs/${job.job_id}`} className="hover:text-brand-ink-soft">
+            {job.job_title}
+          </Link>
         </h3>
         <span className="tag">{job.job_status}</span>
       </div>

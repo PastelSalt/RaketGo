@@ -114,8 +114,8 @@ export default async function JobDetailsPage({
   }
 
   return (
-    <div className="grid" style={{ gap: "1rem" }}>
-      <section className="card">
+    <div className="grid gap-6">
+      <section className="card space-y-3">
         <h1 className="page-title">{job.job_title}</h1>
         <p className="muted">
           {job.location_city}, {job.location_province}, {job.location_region}
@@ -123,7 +123,7 @@ export default async function JobDetailsPage({
         <p className="muted">
           {formatCurrency(Number(job.pay_amount))} / {job.pay_type} • {job.job_status}
         </p>
-        <p>{job.job_description}</p>
+        <p className="text-sm leading-7 text-brand-ink">{job.job_description}</p>
         <p className="muted">Posted {timeAgo(job.created_at)}</p>
         <p className="muted">
           Employer: {job.employer_name} • Trust score {job.employer_trust_score}
@@ -133,25 +133,25 @@ export default async function JobDetailsPage({
         {resolvedSearch.error ? <div className="alert alert-error">{decodeURIComponent(resolvedSearch.error)}</div> : null}
       </section>
 
-      <section className="card">
-        <h2>Job Requirements</h2>
-        <p>
+      <section className="card space-y-2">
+        <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Job Requirements</h2>
+        <p className="text-sm text-brand-ink">
           <strong>Required skills:</strong> {job.required_skills || "Not specified"}
         </p>
-        <p>
+        <p className="text-sm text-brand-ink">
           <strong>Preferred skills:</strong> {job.preferred_skills || "Not specified"}
         </p>
-        <p>
+        <p className="text-sm text-brand-ink">
           <strong>Category:</strong> {job.job_category || "Uncategorized"}
         </p>
-        <p>
+        <p className="text-sm text-brand-ink">
           <strong>Slots:</strong> {job.slots_filled} / {job.slots_available}
         </p>
       </section>
 
       {session?.userType === "worker" ? (
-        <section className="card">
-          <h2>Worker Actions</h2>
+        <section className="card space-y-3">
+          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Worker Actions</h2>
           {userApplication ? (
             <p className="muted">Application status: {userApplication.application_status}</p>
           ) : (
@@ -159,7 +159,7 @@ export default async function JobDetailsPage({
           )}
 
           {job.employer_id !== session.userId ? (
-            <div className="grid" style={{ gap: "0.6rem" }}>
+            <div className="grid gap-2">
               {!userApplication || userApplication.application_status === "withdrawn" ? (
                 <form action="/api/applications" method="post" className="stack-form">
                   <input type="hidden" name="action" value="apply" />
@@ -199,20 +199,20 @@ export default async function JobDetailsPage({
       ) : null}
 
       {session?.userType === "employer" && session.userId === job.employer_id ? (
-        <section className="card">
-          <h2>Applicants</h2>
-          <div className="grid" style={{ gap: "0.8rem" }}>
+        <section className="card space-y-3">
+          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Applicants</h2>
+          <div className="grid gap-3">
             {applications.length ? (
               applications.map((item) => (
-                <article key={item.application_id} className="card" style={{ boxShadow: "none" }}>
-                  <h3>{item.full_name}</h3>
+                <article key={item.application_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+                  <h3 className="text-base font-semibold text-brand-ink">{item.full_name}</h3>
                   <p className="muted">
                     {item.mobile_number} • Trust {item.trust_score}
                   </p>
                   <p className="muted">Status: {item.application_status}</p>
-                  <p>{item.cover_letter || "No cover letter provided."}</p>
+                  <p className="text-sm leading-6 text-brand-ink">{item.cover_letter || "No cover letter provided."}</p>
                   {item.application_status === "pending" ? (
-                    <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+                    <div className="flex flex-wrap gap-2">
                       <form action="/api/applications" method="post">
                         <input type="hidden" name="action" value="approve" />
                         <input type="hidden" name="job_id" value={job.job_id} />
@@ -244,7 +244,7 @@ export default async function JobDetailsPage({
       ) : null}
 
       {!session ? (
-        <section className="card">
+        <section className="card space-y-3">
           <p className="muted">Login to apply, save jobs, and message employers.</p>
           <Link href={`/login?redirect=/jobs/${job.job_id}`} className="btn btn-primary btn-small">
             Login to Continue

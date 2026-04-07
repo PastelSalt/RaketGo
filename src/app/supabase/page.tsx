@@ -20,28 +20,28 @@ export default async function Page() {
     .returns<SkillPost[]>();
 
   return (
-    <section className="card grid" style={{ gap: "0.75rem" }}>
-      <h1 className="page-title" style={{ marginBottom: 0 }}>Supabase Feed Check</h1>
-      <p className="muted" style={{ margin: 0 }}>
+    <section className="card grid gap-3">
+      <h1 className="page-title mb-0">Supabase Feed Check</h1>
+      <p className="muted m-0">
         Source table: <strong>skill_posts</strong>
       </p>
 
       {error ? (
-        <p style={{ color: "#a33", margin: 0 }}>
+        <p className="m-0 rounded-xl border-2 border-brand-red-strong bg-brand-red px-3 py-2 text-sm text-brand-ink">
           Failed to load rows: {error.message}
         </p>
       ) : null}
 
       {!error && !posts?.length ? (
-        <p className="muted" style={{ margin: 0 }}>
+        <p className="muted m-0">
           Connected, but no rows found in <strong>skill_posts</strong>.
         </p>
       ) : null}
 
       {posts?.length ? (
-        <ul style={{ margin: 0, paddingLeft: "1rem" }}>
+        <ul className="m-0 list-disc space-y-2 pl-5 text-sm text-brand-ink">
           {posts.map((post) => (
-            <li key={post.post_id} style={{ marginBottom: "0.4rem" }}>
+            <li key={post.post_id}>
               {post.post_title}
               {post.category ? ` (${post.category})` : ""}
             </li>

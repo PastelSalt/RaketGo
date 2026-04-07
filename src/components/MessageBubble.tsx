@@ -16,8 +16,8 @@ export function MessageBubble({ currentUserId, message }: MessageBubbleProps) {
 
   return (
     <div className={`message-bubble ${ownMessage ? "mine" : "theirs"}`}>
-      <p>{message.message_content}</p>
-      <small>
+      <p className="m-0 text-sm leading-6 text-brand-ink">{message.message_content}</p>
+      <small className="mt-2 block text-xs font-semibold text-brand-ink-soft">
         {ownMessage ? "You" : message.sender_name} • {timeAgo(message.sent_at)}
       </small>
     </div>

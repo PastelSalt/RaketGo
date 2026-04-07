@@ -30,20 +30,20 @@ export default async function ForYouPage() {
     );
 
     return (
-      <div className="grid" style={{ gap: "1rem" }}>
-        <section className="card">
+      <div className="grid gap-6">
+        <section className="card space-y-2">
           <h1 className="page-title">For You</h1>
           <p className="muted">Recommended jobs based on your skills and location.</p>
         </section>
 
-        <section className="card">
-          <h2>Top Matches</h2>
-          <div className="grid" style={{ gap: "0.8rem" }}>
+        <section className="card space-y-3">
+          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Top Matches</h2>
+          <div className="grid gap-3">
             {recommendedJobs.length ? (
               recommendedJobs.map((job) => (
                 <div key={job.job_id}>
                   <JobCard job={job} />
-                  <p className="muted" style={{ margin: "0.4rem 0 0" }}>
+                  <p className="muted mt-2">
                     Match score: {Number(job.match_score).toFixed(2)}
                   </p>
                 </div>
@@ -54,9 +54,9 @@ export default async function ForYouPage() {
           </div>
         </section>
 
-        <section className="card">
-          <h2>Trending Jobs</h2>
-          <div className="grid" style={{ gap: "0.8rem" }}>
+        <section className="card space-y-3">
+          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Trending Jobs</h2>
+          <div className="grid gap-3">
             {trendingJobs.map((job) => (
               <div key={job.job_id}>
                 <JobCard job={job} />
@@ -110,19 +110,19 @@ export default async function ForYouPage() {
   }
 
   return (
-    <div className="grid" style={{ gap: "1rem" }}>
-      <section className="card">
+    <div className="grid gap-6">
+      <section className="card space-y-2">
         <h1 className="page-title">For You</h1>
         <p className="muted">Recommended workers and high-traction jobs for employers.</p>
       </section>
 
-      <section className="card">
-        <h2>Suggested Workers</h2>
-        <div className="grid" style={{ gap: "0.8rem" }}>
+      <section className="card space-y-3">
+        <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Suggested Workers</h2>
+        <div className="grid gap-3">
           {recommendedWorkers.length ? (
             recommendedWorkers.map((worker) => (
-              <article key={worker.user_id} className="card" style={{ boxShadow: "none" }}>
-                <h3>{worker.full_name}</h3>
+              <article key={worker.user_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+                <h3 className="text-base font-semibold text-brand-ink">{worker.full_name}</h3>
                 <p className="muted">
                   {worker.city}, {worker.province}
                 </p>
@@ -139,9 +139,9 @@ export default async function ForYouPage() {
         </div>
       </section>
 
-      <section className="card">
-        <h2>Trending Jobs</h2>
-        <div className="grid" style={{ gap: "0.8rem" }}>
+      <section className="card space-y-3">
+        <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Trending Jobs</h2>
+        <div className="grid gap-3">
           {trendingJobs.map((job) => (
             <div key={job.job_id}>
               <JobCard job={job} />

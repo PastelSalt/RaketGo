@@ -14,13 +14,15 @@ export default async function SignupPage({
   const error = params.error ? decodeURIComponent(params.error) : "";
 
   return (
-    <section className="card" style={{ maxWidth: "720px", margin: "0 auto" }}>
-      <h1 className="page-title">Create Account</h1>
-      <p className="muted">Register as worker or employer.</p>
+    <section className="card mx-auto max-w-3xl space-y-4">
+      <div>
+        <h1 className="page-title">Create Account</h1>
+        <p className="muted">Register as worker or employer.</p>
+      </div>
       {error ? <div className="alert alert-error">{error}</div> : null}
       <SignupForm />
-      <p className="muted" style={{ marginTop: "1rem" }}>
-        Already have an account? <Link href="/login">Login</Link>
+      <p className="muted pt-2">
+        Already have an account? <Link href="/login" className="font-semibold text-brand-ink">Login</Link>
       </p>
     </section>
   );

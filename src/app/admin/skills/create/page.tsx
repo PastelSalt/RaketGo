@@ -11,9 +11,11 @@ export default async function CreateSkillPostPage() {
   }
 
   return (
-    <section className="card">
-      <h1 className="page-title">Create Skill Post</h1>
-      <p className="muted">Admin posting UI scaffolded during migration.</p>
+    <section className="card mx-auto max-w-3xl space-y-4">
+      <div>
+        <h1 className="page-title">Create Skill Post</h1>
+        <p className="muted">Admin posting UI scaffolded during migration.</p>
+      </div>
       <form className="stack-form" action="#" method="post">
         <label>
           Post Title

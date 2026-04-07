@@ -132,9 +132,15 @@ export default async function HomePage({
   }
 
   return (
-    <div className="grid" style={{ gap: "1rem" }}>
-      <section className="card">
-        <h1 className="page-title">Find Jobs Across the Philippines</h1>
+    <div className="grid gap-6">
+      <section className="card space-y-4">
+        <div className="space-y-2">
+          <h1 className="page-title">Find Jobs Across the Philippines</h1>
+          <p className="muted">
+            Discover verified opportunities from trusted employers and filter by region,
+            category, and pay.
+          </p>
+        </div>
         <form className="search-form" method="get">
           <input name="q" defaultValue={q} placeholder="Search title, skill, or description" />
           <select name="region" defaultValue={region}>
@@ -162,20 +168,25 @@ export default async function HomePage({
             Filter
           </button>
         </form>
-        <p className="muted">{total} jobs found</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="muted">{total} jobs found</p>
+          <Link href="/for-you" className="btn btn-outline btn-small">
+            Open Personalized Feed
+          </Link>
+        </div>
         {hasDataError ? (
           <p className="muted">Data source is currently unavailable. Check database environment variables and verify schema setup.</p>
         ) : null}
       </section>
 
-      <section className="grid grid-2">
-        <div className="grid" style={{ gap: "0.8rem" }}>
+      <section className="grid grid-2 items-start">
+        <div className="grid gap-3">
           {hasDataError ? (
-            <p>Job listings are temporarily unavailable.</p>
+            <p className="muted">Job listings are temporarily unavailable.</p>
           ) : jobs.length ? (
             jobs.map((job) => <JobCard key={job.job_id} job={job} />)
           ) : (
-            <p>No active jobs found.</p>
+            <p className="muted">No active jobs found.</p>
           )}
           <div className="pager">
             <Link
@@ -194,21 +205,22 @@ export default async function HomePage({
           </div>
         </div>
 
-        <aside className="card">
-          <h2>Learning Announcements</h2>
-          <div className="grid" style={{ gap: "0.8rem" }}>
+        <aside className="card space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Learning Announcements</h2>
+            <p className="muted">Stay updated with certifications and training opportunities.</p>
+          </div>
+          <div className="grid gap-3">
             {announcements.map((item) => (
-              <article key={item.post_id} className="card" style={{ boxShadow: "none" }}>
-                <h3>{item.post_title}</h3>
+              <article key={item.post_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+                <h3 className="text-base font-semibold text-brand-ink">{item.post_title}</h3>
                 <p className="muted">{item.category || "General"}</p>
               </article>
             ))}
           </div>
-          <div style={{ marginTop: "1rem" }}>
-            <Link href="/learn" className="btn btn-outline btn-small">
-              Open Learning Hub
-            </Link>
-          </div>
+          <Link href="/learn" className="btn btn-secondary btn-small">
+            Open Learning Hub
+          </Link>
         </aside>
       </section>
     </div>

@@ -69,8 +69,8 @@ export default async function MessagesPage({
   }
 
   return (
-    <div className="grid" style={{ gap: "1rem" }}>
-      <section className="card">
+    <div className="grid gap-6">
+      <section className="card space-y-2">
         <h1 className="page-title">Messages</h1>
         {params.success ? <div className="alert alert-success">{decodeURIComponent(params.success)}</div> : null}
         {params.error ? <div className="alert alert-error">{decodeURIComponent(params.error)}</div> : null}
@@ -80,8 +80,12 @@ export default async function MessagesPage({
         <aside className="card message-list">
           {conversations.length ? (
             conversations.map((item) => (
-              <Link key={item.user_id} href={`/messages?with=${item.user_id}`} className="card" style={{ boxShadow: "none" }}>
-                <strong>{item.full_name}</strong>
+              <Link
+                key={item.user_id}
+                href={`/messages?with=${item.user_id}`}
+                className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4"
+              >
+                <strong className="text-sm text-brand-ink">{item.full_name}</strong>
                 <p className="muted">{item.user_type}</p>
                 <p className="muted">{item.last_message || "No messages yet"}</p>
                 {item.unread_count ? <span className="badge">{item.unread_count}</span> : null}
@@ -95,8 +99,8 @@ export default async function MessagesPage({
         <div className="card">
           {partner ? (
             <>
-              <h2>Chat with {partner.full_name}</h2>
-              <div className="grid" style={{ gap: "0.6rem", marginBottom: "1rem" }}>
+              <h2 className="mb-3 text-xl font-semibold tracking-tight text-brand-ink">Chat with {partner.full_name}</h2>
+              <div className="mb-4 grid gap-2">
                 {messages.length ? (
                   messages.map((message) => (
                     <MessageBubble key={message.message_id} currentUserId={session.userId} message={message} />

@@ -14,7 +14,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         Password
         <input name="password" type="password" required />
       </label>
-      <button className="btn btn-primary" type="submit">
+      <button className="btn btn-primary w-full sm:w-auto" type="submit">
         Login
       </button>
     </form>

@@ -47,8 +47,8 @@ export default async function DashboardPage() {
     );
 
     return (
-      <div className="grid" style={{ gap: "1rem" }}>
-        <section className="card">
+      <div className="grid gap-6">
+        <section className="card space-y-3">
           <h1 className="page-title">Worker Dashboard</h1>
           <p className="muted">
             {user?.full_name} • {user?.city}, {user?.province}
@@ -62,16 +62,19 @@ export default async function DashboardPage() {
           <StatCard label="Saved Jobs" value={stats?.saved_jobs ?? 0} />
         </section>
 
-        <section className="card">
-          <h2>Skills</h2>
-          <div className="grid" style={{ gap: "0.6rem" }}>
+        <section className="card space-y-3">
+          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Skills</h2>
+          <div className="grid gap-2">
             {skills.length ? (
               skills.map((skill) => (
-                <div key={skill.skill_id} className="tag" style={{ justifyContent: "space-between" }}>
+                <div
+                  key={skill.skill_id}
+                  className="flex items-center justify-between gap-2 rounded-2xl border-2 border-brand-red bg-brand-red px-3 py-2 text-sm font-semibold text-brand-ink"
+                >
                   <span>
                     {skill.skill_name} ({skill.proficiency_level})
                   </span>
-                  {skill.is_verified ? <strong>Verified</strong> : null}
+                  {skill.is_verified ? <strong className="text-xs uppercase">Verified</strong> : null}
                 </div>
               ))
             ) : (
@@ -80,13 +83,13 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <section className="card">
-          <h2>Recent Applications</h2>
-          <div className="grid" style={{ gap: "0.6rem" }}>
+        <section className="card space-y-3">
+          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Recent Applications</h2>
+          <div className="grid gap-2">
             {applications.length ? (
               applications.map((item) => (
-                <article key={item.application_id} className="card" style={{ boxShadow: "none" }}>
-                  <h3>{item.job_title}</h3>
+                <article key={item.application_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+                  <h3 className="text-base font-semibold text-brand-ink">{item.job_title}</h3>
                   <p className="muted">Employer: {item.employer_name}</p>
                   <p className="muted">
                     {formatCurrency(Number(item.pay_amount))} / {item.pay_type}
@@ -102,14 +105,16 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <section className="card">
-          <h2>Saved Jobs</h2>
-          <div className="grid" style={{ gap: "0.6rem" }}>
+        <section className="card space-y-3">
+          <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Saved Jobs</h2>
+          <div className="grid gap-2">
             {savedJobs.length ? (
               savedJobs.map((job) => (
-                <article key={job.job_id} className="card" style={{ boxShadow: "none" }}>
-                  <h3>
-                    <Link href={`/jobs/${job.job_id}`}>{job.job_title}</Link>
+                <article key={job.job_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+                  <h3 className="text-base font-semibold text-brand-ink">
+                    <Link href={`/jobs/${job.job_id}`} className="hover:text-brand-ink-soft">
+                      {job.job_title}
+                    </Link>
                   </h3>
                   <p className="muted">
                     {job.location_city} • {formatCurrency(Number(job.pay_amount))} / {job.pay_type}
@@ -152,8 +157,8 @@ export default async function DashboardPage() {
   );
 
   return (
-    <div className="grid" style={{ gap: "1rem" }}>
-      <section className="card">
+    <div className="grid gap-6">
+      <section className="card space-y-3">
         <h1 className="page-title">Employer Dashboard</h1>
         <p className="muted">
           {user?.full_name} • {user?.city}, {user?.province}
@@ -170,14 +175,16 @@ export default async function DashboardPage() {
         <StatCard label="Pending Applications" value={stats?.pending_applications ?? 0} />
       </section>
 
-      <section className="card">
-        <h2>Posted Jobs</h2>
-        <div className="grid" style={{ gap: "0.6rem" }}>
+      <section className="card space-y-3">
+        <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Posted Jobs</h2>
+        <div className="grid gap-2">
           {jobs.length ? (
             jobs.map((job) => (
-              <article key={job.job_id} className="card" style={{ boxShadow: "none" }}>
-                <h3>
-                  <Link href={`/jobs/${job.job_id}`}>{job.job_title}</Link>
+              <article key={job.job_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+                <h3 className="text-base font-semibold text-brand-ink">
+                  <Link href={`/jobs/${job.job_id}`} className="hover:text-brand-ink-soft">
+                    {job.job_title}
+                  </Link>
                 </h3>
                 <p className="muted">
                   Status: {job.job_status} • {job.application_count} applications ({job.pending_count} pending)
@@ -190,13 +197,13 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section className="card">
-        <h2>Pending Applications</h2>
-        <div className="grid" style={{ gap: "0.6rem" }}>
+      <section className="card space-y-3">
+        <h2 className="text-xl font-semibold tracking-tight text-brand-ink">Pending Applications</h2>
+        <div className="grid gap-2">
           {pendingApps.length ? (
             pendingApps.map((item) => (
-              <article key={item.application_id} className="card" style={{ boxShadow: "none" }}>
-                <h3>{item.worker_name}</h3>
+              <article key={item.application_id} className="rounded-2xl border-2 border-brand-blue bg-brand-blue p-4">
+                <h3 className="text-base font-semibold text-brand-ink">{item.worker_name}</h3>
                 <p className="muted">{item.job_title}</p>
                 <p className="muted">Trust: {item.trust_score}</p>
               </article>
