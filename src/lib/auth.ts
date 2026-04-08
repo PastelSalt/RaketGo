@@ -5,13 +5,28 @@ import type { SessionUser, UserType } from "@/lib/types";
 
 export const SESSION_COOKIE_NAME = "raketgo_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
+const DEV_FALLBACK_SESSION_SECRET = "raketgo-dev-session-secret-not-for-production-use";
+
+let hasWarnedAboutDevFallback = false;
 
 function getSessionSecret(): Uint8Array {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error("SESSION_SECRET must be set and at least 32 characters long.");
+  const secret = (process.env.SESSION_SECRET ?? "").trim();
+  if (secret.length >= 32) {
+    return new TextEncoder().encode(secret);
   }
-  return new TextEncoder().encode(secret);
+
+  if (process.env.NODE_ENV !== "production") {
+    if (!hasWarnedAboutDevFallback) {
+      hasWarnedAboutDevFallback = true;
+      console.warn(
+        "SESSION_SECRET is missing or too short. Using a development-only fallback secret."
+      );
+    }
+
+    return new TextEncoder().encode(DEV_FALLBACK_SESSION_SECRET);
+  }
+
+  throw new Error("SESSION_SECRET must be set and at least 32 characters long.");
 }
 
 export async function createSessionToken(user: SessionUser): Promise<string> {
