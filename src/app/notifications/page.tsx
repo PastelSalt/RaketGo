@@ -30,7 +30,7 @@ export default async function NotificationsPage({
       created_at: string;
     }>
   >(
-    "SELECT notification_id, notification_type, title, message, is_read, action_url, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
+    "SELECT notification_id, notification_type, title, message, is_read, action_url, created_at FROM public.notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
     [session.userId]
   );
 

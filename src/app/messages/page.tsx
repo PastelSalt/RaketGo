@@ -26,7 +26,7 @@ export default async function MessagesPage({
   const conversations = await queryRows<
     Array<{ user_id: number; full_name: string; user_type: string; unread_count: number; last_message: string; last_sent_at: string | null }>
   >(
-    "SELECT DISTINCT u.user_id, u.full_name, u.user_type, (SELECT COUNT(*) FROM messages m3 WHERE m3.sender_id = u.user_id AND m3.receiver_id = ? AND m3.is_read = FALSE) AS unread_count, (SELECT m2.message_content FROM messages m2 WHERE (m2.sender_id = ? AND m2.receiver_id = u.user_id) OR (m2.sender_id = u.user_id AND m2.receiver_id = ?) ORDER BY m2.sent_at DESC LIMIT 1) AS last_message, (SELECT m4.sent_at FROM messages m4 WHERE (m4.sender_id = ? AND m4.receiver_id = u.user_id) OR (m4.sender_id = u.user_id AND m4.receiver_id = ?) ORDER BY m4.sent_at DESC LIMIT 1) AS last_sent_at FROM messages m JOIN users u ON u.user_id = CASE WHEN m.sender_id = ? THEN m.receiver_id ELSE m.sender_id END WHERE (m.sender_id = ? OR m.receiver_id = ?) ORDER BY last_sent_at DESC",
+    "SELECT DISTINCT u.user_id, u.full_name, u.user_type, (SELECT COUNT(*) FROM public.messages m3 WHERE m3.sender_id = u.user_id AND m3.receiver_id = ? AND m3.is_read = FALSE) AS unread_count, (SELECT m2.message_content FROM public.messages m2 WHERE (m2.sender_id = ? AND m2.receiver_id = u.user_id) OR (m2.sender_id = u.user_id AND m2.receiver_id = ?) ORDER BY m2.sent_at DESC LIMIT 1) AS last_message, (SELECT m4.sent_at FROM public.messages m4 WHERE (m4.sender_id = ? AND m4.receiver_id = u.user_id) OR (m4.sender_id = u.user_id AND m4.receiver_id = ?) ORDER BY m4.sent_at DESC LIMIT 1) AS last_sent_at FROM public.messages m JOIN public.users u ON u.user_id = CASE WHEN m.sender_id = ? THEN m.receiver_id ELSE m.sender_id END WHERE (m.sender_id = ? OR m.receiver_id = ?) ORDER BY last_sent_at DESC",
     [
       session.userId,
       session.userId,
@@ -50,19 +50,19 @@ export default async function MessagesPage({
 
   if (partnerId > 0) {
     const [partnerRow] = await queryRows<{ user_id: number; full_name: string; user_type: string }>(
-      "SELECT user_id, full_name, user_type FROM users WHERE user_id = ? AND account_status = 'active'",
+      "SELECT user_id, full_name, user_type FROM public.users WHERE user_id = ? AND account_status = 'active'",
       [partnerId]
     );
     partner = partnerRow ?? null;
 
     if (partner) {
       messages = await queryRows<typeof messages>(
-        "SELECT m.message_id, m.sender_id, s.full_name AS sender_name, m.message_content, m.sent_at FROM messages m JOIN users s ON m.sender_id = s.user_id WHERE (m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?) ORDER BY m.sent_at ASC",
+        "SELECT m.message_id, m.sender_id, s.full_name AS sender_name, m.message_content, m.sent_at FROM public.messages m JOIN public.users s ON m.sender_id = s.user_id WHERE (m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?) ORDER BY m.sent_at ASC",
         [session.userId, partnerId, partnerId, session.userId]
       );
 
       await execute(
-        "UPDATE messages SET is_read = TRUE, read_at = NOW() WHERE sender_id = ? AND receiver_id = ? AND is_read = FALSE",
+        "UPDATE public.messages SET is_read = TRUE, read_at = NOW() WHERE sender_id = ? AND receiver_id = ? AND is_read = FALSE",
         [partnerId, session.userId]
       );
     }

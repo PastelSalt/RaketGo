@@ -57,7 +57,7 @@ export default async function LearnPage({
   const whereClause = whereParts.length ? `WHERE ${whereParts.join(" AND ")}` : "";
 
   const [countRow] = await queryRows<{ total: number }>(
-    `SELECT COUNT(*) AS total FROM skill_posts sp ${whereClause}`,
+    `SELECT COUNT(*) AS total FROM public.skill_posts sp ${whereClause}`,
     args
   );
 
@@ -78,8 +78,8 @@ export default async function LearnPage({
     }>
   >(
     `SELECT sp.post_id, sp.post_title, sp.post_content, sp.post_type, sp.category, sp.link_url, sp.is_featured, sp.created_at, u.full_name AS admin_name
-     FROM skill_posts sp
-     JOIN users u ON sp.admin_id = u.user_id
+     FROM public.skill_posts sp
+     JOIN public.users u ON sp.admin_id = u.user_id
      ${whereClause}
      ORDER BY sp.is_featured DESC, sp.created_at DESC
      LIMIT ? OFFSET ?`,
@@ -87,7 +87,7 @@ export default async function LearnPage({
   );
 
   const categories = await queryRows<{ category: string }>(
-    "SELECT DISTINCT category FROM skill_posts WHERE category IS NOT NULL AND category != '' ORDER BY category ASC"
+    "SELECT DISTINCT category FROM public.skill_posts WHERE category IS NOT NULL AND category != '' ORDER BY category ASC"
   );
 
   const buildHref = (updates: Partial<SearchParams> = {}) => {

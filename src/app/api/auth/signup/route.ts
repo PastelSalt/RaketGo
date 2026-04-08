@@ -1,6 +1,6 @@
-import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { execute, queryRows } from "@/lib/db";
+import { createSupabaseAdminClient } from "@/lib/supabaseAuth";
 import { signupSchema } from "@/lib/validators";
 import { sanitizeInput } from "@/lib/utils";
 
@@ -8,6 +8,16 @@ function redirectToSignupError(request: Request, message: string) {
   const url = new URL("/signup", request.url);
   url.searchParams.set("error", message);
   return NextResponse.redirect(url);
+}
+
+function resolveSupabaseEmail(email: string, mobileNumber: string): string {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (normalizedEmail) {
+    return normalizedEmail;
+  }
+
+  const normalizedMobile = mobileNumber.replace(/\D/g, "");
+  return `u${normalizedMobile}@users.raketgo.local`;
 }
 
 export async function POST(request: Request) {
@@ -38,38 +48,72 @@ export async function POST(request: Request) {
     return redirectToSignupError(request, parsed.error.issues[0]?.message ?? "Invalid registration details.");
   }
 
+  const resolvedEmail = resolveSupabaseEmail(parsed.data.email || "", parsed.data.mobile_number);
+
   const existingUsers = await queryRows<{ user_id: number }>(
-    "SELECT user_id FROM users WHERE mobile_number = ? OR (email IS NOT NULL AND email != '' AND email = ?) LIMIT 1",
-    [parsed.data.mobile_number, parsed.data.email || ""]
+    "SELECT user_id FROM public.users WHERE mobile_number = ? OR email = ? LIMIT 1",
+    [parsed.data.mobile_number, resolvedEmail]
   );
 
   if (existingUsers.length) {
     return redirectToSignupError(request, "Mobile number or email already registered.");
   }
 
-  const passwordHash = await hash(parsed.data.password, 12);
-
-  const created = await execute(
-    "INSERT INTO users (mobile_number, email, password_hash, user_type, full_name, region, province, city) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    [
-      parsed.data.mobile_number,
-      parsed.data.email || null,
-      passwordHash,
-      parsed.data.user_type,
-      parsed.data.full_name,
-      parsed.data.region,
-      parsed.data.province,
-      parsed.data.city
-    ]
-  );
-
-  if (parsed.data.user_type === "worker" && parsed.data.skills.length) {
-    for (const skill of parsed.data.skills) {
-      await execute(
-        "INSERT INTO user_skills (user_id, skill_name) VALUES (?, ?) ON CONFLICT (user_id, skill_name) DO NOTHING",
-        [created.insertId, skill]
-      );
+  let supabaseAdmin;
+  try {
+    supabaseAdmin = createSupabaseAdminClient();
+  } catch {
+    return redirectToSignupError(
+      request,
+      "Supabase auth is not configured. Set SUPABASE_SERVICE_ROLE_KEY and try again."
+    );
+  }
+  const { data: createdAuthUser, error: signupError } = await supabaseAdmin.auth.admin.createUser({
+    email: resolvedEmail,
+    password: parsed.data.password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: parsed.data.full_name,
+      mobile_number: parsed.data.mobile_number,
+      user_type: parsed.data.user_type
     }
+  });
+
+  if (signupError || !createdAuthUser.user?.id) {
+    return redirectToSignupError(
+      request,
+      signupError?.message ?? "Unable to create Supabase auth user. Please try again."
+    );
+  }
+
+  const authUserId = createdAuthUser.user.id;
+
+  try {
+    const created = await execute(
+      "INSERT INTO public.users (auth_user_id, mobile_number, email, password_hash, user_type, full_name, region, province, city) VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?)",
+      [
+        authUserId,
+        parsed.data.mobile_number,
+        resolvedEmail,
+        parsed.data.user_type,
+        parsed.data.full_name,
+        parsed.data.region,
+        parsed.data.province,
+        parsed.data.city
+      ]
+    );
+
+    if (parsed.data.user_type === "worker" && parsed.data.skills.length) {
+      for (const skill of parsed.data.skills) {
+        await execute(
+          "INSERT INTO public.user_skills (user_id, skill_name) VALUES (?, ?) ON CONFLICT (user_id, skill_name) DO NOTHING",
+          [created.insertId, skill]
+        );
+      }
+    }
+  } catch {
+    await supabaseAdmin.auth.admin.deleteUser(authUserId).catch(() => undefined);
+    return redirectToSignupError(request, "Unable to save profile data. Please try again.");
   }
 
   const url = new URL("/login", request.url);

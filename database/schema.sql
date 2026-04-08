@@ -1,48 +1,64 @@
--- RaketGo Database Schema (PostgreSQL / Supabase)
--- Converted from MySQL for Supabase SQL Editor
--- Created and managed by Moesoft (Moeko Software)
+-- RaketGo Database Schema (Supabase PostgreSQL)
+--
+-- This migration manages only application objects in the public schema.
+-- Supabase-managed schemas (auth, realtime, storage, vault) are intentionally
+-- not dropped or modified, except for a safe auth.users email-sync trigger.
 
 BEGIN;
 
--- Drop existing tables if they exist
-DROP TABLE IF EXISTS transactions CASCADE;
-DROP TABLE IF EXISTS user_interactions CASCADE;
-DROP TABLE IF EXISTS auth_rate_limits CASCADE;
-DROP TABLE IF EXISTS notifications CASCADE;
-DROP TABLE IF EXISTS messages CASCADE;
-DROP TABLE IF EXISTS skill_posts CASCADE;
-DROP TABLE IF EXISTS digital_contracts CASCADE;
-DROP TABLE IF EXISTS job_applications CASCADE;
-DROP TABLE IF EXISTS job_posts CASCADE;
-DROP TABLE IF EXISTS user_skills CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+CREATE SCHEMA IF NOT EXISTS public;
 
--- Drop enum types for idempotent re-runs
-DROP TYPE IF EXISTS transaction_status_enum CASCADE;
-DROP TYPE IF EXISTS transaction_type_enum CASCADE;
-DROP TYPE IF EXISTS interaction_type_enum CASCADE;
-DROP TYPE IF EXISTS post_type_enum CASCADE;
-DROP TYPE IF EXISTS application_status_enum CASCADE;
-DROP TYPE IF EXISTS job_status_enum CASCADE;
-DROP TYPE IF EXISTS pay_type_enum CASCADE;
-DROP TYPE IF EXISTS proficiency_level_enum CASCADE;
-DROP TYPE IF EXISTS account_status_enum CASCADE;
-DROP TYPE IF EXISTS user_type_enum CASCADE;
+-- Drop triggers first for idempotent reruns.
+DROP TRIGGER IF EXISTS trg_users_set_updated_at ON public.users;
+DROP TRIGGER IF EXISTS trg_job_posts_set_updated_at ON public.job_posts;
+DROP TRIGGER IF EXISTS trg_skill_posts_set_updated_at ON public.skill_posts;
+DROP TRIGGER IF EXISTS trg_auth_rate_limits_set_last_attempt_at ON public.auth_rate_limits;
+DROP TRIGGER IF EXISTS trg_auth_user_email_sync ON auth.users;
 
--- Enum types
-CREATE TYPE user_type_enum AS ENUM ('admin', 'employer', 'worker');
-CREATE TYPE account_status_enum AS ENUM ('active', 'suspended', 'deleted');
-CREATE TYPE proficiency_level_enum AS ENUM ('beginner', 'intermediate', 'advanced', 'expert');
-CREATE TYPE pay_type_enum AS ENUM ('hourly', 'daily', 'fixed', 'monthly');
-CREATE TYPE job_status_enum AS ENUM ('draft', 'active', 'in_progress', 'completed', 'cancelled');
-CREATE TYPE application_status_enum AS ENUM ('pending', 'approved', 'rejected', 'withdrawn');
-CREATE TYPE post_type_enum AS ENUM ('certification', 'training', 'course', 'workshop');
-CREATE TYPE interaction_type_enum AS ENUM ('view', 'apply', 'save', 'like', 'share', 'click');
-CREATE TYPE transaction_type_enum AS ENUM ('deposit', 'withdrawal', 'payment', 'refund', 'advance');
-CREATE TYPE transaction_status_enum AS ENUM ('pending', 'completed', 'failed', 'cancelled');
+-- Drop helper functions.
+DROP FUNCTION IF EXISTS public.set_updated_at();
+DROP FUNCTION IF EXISTS public.set_last_attempt_at();
+DROP FUNCTION IF EXISTS public.sync_public_user_email_from_auth();
 
--- Trigger helpers for MySQL ON UPDATE CURRENT_TIMESTAMP behavior
-CREATE OR REPLACE FUNCTION set_updated_at()
+-- Drop existing application tables if they exist.
+DROP TABLE IF EXISTS public.transactions CASCADE;
+DROP TABLE IF EXISTS public.user_interactions CASCADE;
+DROP TABLE IF EXISTS public.auth_rate_limits CASCADE;
+DROP TABLE IF EXISTS public.notifications CASCADE;
+DROP TABLE IF EXISTS public.messages CASCADE;
+DROP TABLE IF EXISTS public.skill_posts CASCADE;
+DROP TABLE IF EXISTS public.digital_contracts CASCADE;
+DROP TABLE IF EXISTS public.job_applications CASCADE;
+DROP TABLE IF EXISTS public.job_posts CASCADE;
+DROP TABLE IF EXISTS public.user_skills CASCADE;
+DROP TABLE IF EXISTS public.users CASCADE;
+
+-- Drop enum types for idempotent reruns.
+DROP TYPE IF EXISTS public.transaction_status_enum CASCADE;
+DROP TYPE IF EXISTS public.transaction_type_enum CASCADE;
+DROP TYPE IF EXISTS public.interaction_type_enum CASCADE;
+DROP TYPE IF EXISTS public.post_type_enum CASCADE;
+DROP TYPE IF EXISTS public.application_status_enum CASCADE;
+DROP TYPE IF EXISTS public.job_status_enum CASCADE;
+DROP TYPE IF EXISTS public.pay_type_enum CASCADE;
+DROP TYPE IF EXISTS public.proficiency_level_enum CASCADE;
+DROP TYPE IF EXISTS public.account_status_enum CASCADE;
+DROP TYPE IF EXISTS public.user_type_enum CASCADE;
+
+-- Enum types.
+CREATE TYPE public.user_type_enum AS ENUM ('admin', 'employer', 'worker');
+CREATE TYPE public.account_status_enum AS ENUM ('active', 'suspended', 'deleted');
+CREATE TYPE public.proficiency_level_enum AS ENUM ('beginner', 'intermediate', 'advanced', 'expert');
+CREATE TYPE public.pay_type_enum AS ENUM ('hourly', 'daily', 'fixed', 'monthly');
+CREATE TYPE public.job_status_enum AS ENUM ('draft', 'active', 'in_progress', 'completed', 'cancelled');
+CREATE TYPE public.application_status_enum AS ENUM ('pending', 'approved', 'rejected', 'withdrawn');
+CREATE TYPE public.post_type_enum AS ENUM ('certification', 'training', 'course', 'workshop');
+CREATE TYPE public.interaction_type_enum AS ENUM ('view', 'apply', 'save', 'like', 'share', 'click');
+CREATE TYPE public.transaction_type_enum AS ENUM ('deposit', 'withdrawal', 'payment', 'refund', 'advance');
+CREATE TYPE public.transaction_status_enum AS ENUM ('pending', 'completed', 'failed', 'cancelled');
+
+-- Trigger helpers for timestamp updates.
+CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
@@ -52,7 +68,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION set_last_attempt_at()
+CREATE OR REPLACE FUNCTION public.set_last_attempt_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
@@ -62,13 +78,15 @@ BEGIN
 END;
 $$;
 
--- Users table (for all three account types)
-CREATE TABLE users (
+-- Users table for platform profiles.
+-- auth_user_id links to Supabase Auth user identities.
+CREATE TABLE public.users (
     user_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    auth_user_id UUID UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL,
     mobile_number VARCHAR(15) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    user_type user_type_enum NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    password_hash VARCHAR(255),
+    user_type public.user_type_enum NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     profile_picture VARCHAR(255),
     region VARCHAR(100) NOT NULL,
@@ -83,34 +101,34 @@ CREATE TABLE users (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMPTZ,
-    account_status account_status_enum DEFAULT 'active'
+    account_status public.account_status_enum DEFAULT 'active'
 );
 
-CREATE INDEX idx_users_user_type ON users (user_type);
-CREATE INDEX idx_users_location ON users (region, province, city);
-CREATE INDEX idx_users_trust_score ON users (trust_score);
+CREATE INDEX idx_users_user_type ON public.users (user_type);
+CREATE INDEX idx_users_location ON public.users (region, province, city);
+CREATE INDEX idx_users_trust_score ON public.users (trust_score);
 
--- User skills table (many-to-many relationship with skill tags)
-CREATE TABLE user_skills (
+-- User skills table.
+CREATE TABLE public.user_skills (
     skill_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
     skill_name VARCHAR(100) NOT NULL,
     is_verified BOOLEAN DEFAULT FALSE,
     verification_document VARCHAR(255),
-    verified_by INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
+    verified_by INTEGER REFERENCES public.users(user_id) ON DELETE SET NULL,
     verified_at TIMESTAMPTZ,
-    proficiency_level proficiency_level_enum DEFAULT 'beginner',
+    proficiency_level public.proficiency_level_enum DEFAULT 'beginner',
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uniq_user_skill UNIQUE (user_id, skill_name)
 );
 
-CREATE INDEX idx_user_skills_user_id ON user_skills (user_id);
-CREATE INDEX idx_user_skills_skill_name ON user_skills (skill_name);
+CREATE INDEX idx_user_skills_user_id ON public.user_skills (user_id);
+CREATE INDEX idx_user_skills_skill_name ON public.user_skills (skill_name);
 
--- Job posts table
-CREATE TABLE job_posts (
+-- Job posts table.
+CREATE TABLE public.job_posts (
     job_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    employer_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    employer_id INTEGER NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
     job_title VARCHAR(200) NOT NULL,
     job_description TEXT NOT NULL,
     location_region VARCHAR(100) NOT NULL,
@@ -118,7 +136,7 @@ CREATE TABLE job_posts (
     location_city VARCHAR(100) NOT NULL,
     specific_address TEXT,
     pay_amount NUMERIC(10,2) NOT NULL,
-    pay_type pay_type_enum NOT NULL,
+    pay_type public.pay_type_enum NOT NULL,
     required_skills TEXT,
     preferred_skills TEXT,
     job_category VARCHAR(100),
@@ -127,26 +145,26 @@ CREATE TABLE job_posts (
     slots_available INTEGER DEFAULT 1,
     slots_filled INTEGER DEFAULT 0,
     advance_payment_amount NUMERIC(10,2) DEFAULT 0.00,
-    job_status job_status_enum DEFAULT 'active',
+    job_status public.job_status_enum DEFAULT 'active',
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_job_posts_employer_id ON job_posts (employer_id);
-CREATE INDEX idx_job_posts_status ON job_posts (job_status);
-CREATE INDEX idx_job_posts_location ON job_posts (location_region, location_province, location_city);
-CREATE INDEX idx_job_posts_created_at ON job_posts (created_at);
-CREATE INDEX idx_job_posts_status_region_created ON job_posts (job_status, location_region, created_at);
-CREATE INDEX idx_job_posts_status_category_created ON job_posts (job_status, job_category, created_at);
-CREATE INDEX idx_job_posts_status_pay_created ON job_posts (job_status, pay_amount, created_at);
+CREATE INDEX idx_job_posts_employer_id ON public.job_posts (employer_id);
+CREATE INDEX idx_job_posts_status ON public.job_posts (job_status);
+CREATE INDEX idx_job_posts_location ON public.job_posts (location_region, location_province, location_city);
+CREATE INDEX idx_job_posts_created_at ON public.job_posts (created_at);
+CREATE INDEX idx_job_posts_status_region_created ON public.job_posts (job_status, location_region, created_at);
+CREATE INDEX idx_job_posts_status_category_created ON public.job_posts (job_status, job_category, created_at);
+CREATE INDEX idx_job_posts_status_pay_created ON public.job_posts (job_status, pay_amount, created_at);
 
--- Job applications table
-CREATE TABLE job_applications (
+-- Job applications table.
+CREATE TABLE public.job_applications (
     application_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    job_id INTEGER NOT NULL REFERENCES job_posts(job_id) ON DELETE CASCADE,
-    worker_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    employer_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    application_status application_status_enum DEFAULT 'pending',
+    job_id INTEGER NOT NULL REFERENCES public.job_posts(job_id) ON DELETE CASCADE,
+    worker_id INTEGER NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    employer_id INTEGER NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    application_status public.application_status_enum DEFAULT 'pending',
     cover_letter TEXT,
     applied_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     reviewed_at TIMESTAMPTZ,
@@ -159,16 +177,16 @@ CREATE TABLE job_applications (
     CONSTRAINT unique_application UNIQUE (job_id, worker_id)
 );
 
-CREATE INDEX idx_job_applications_worker_id ON job_applications (worker_id);
-CREATE INDEX idx_job_applications_employer_id ON job_applications (employer_id);
-CREATE INDEX idx_job_applications_status ON job_applications (application_status);
-CREATE INDEX idx_job_applications_employer_status ON job_applications (employer_id, application_status);
-CREATE INDEX idx_job_applications_job_status ON job_applications (job_id, application_status);
+CREATE INDEX idx_job_applications_worker_id ON public.job_applications (worker_id);
+CREATE INDEX idx_job_applications_employer_id ON public.job_applications (employer_id);
+CREATE INDEX idx_job_applications_status ON public.job_applications (application_status);
+CREATE INDEX idx_job_applications_employer_status ON public.job_applications (employer_id, application_status);
+CREATE INDEX idx_job_applications_job_status ON public.job_applications (job_id, application_status);
 
--- Digital contracts table
-CREATE TABLE digital_contracts (
+-- Digital contracts table.
+CREATE TABLE public.digital_contracts (
     contract_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    application_id INTEGER NOT NULL REFERENCES job_applications(application_id) ON DELETE CASCADE,
+    application_id INTEGER NOT NULL REFERENCES public.job_applications(application_id) ON DELETE CASCADE,
     contract_content TEXT NOT NULL,
     contract_terms TEXT,
     instructions TEXT,
@@ -181,15 +199,15 @@ CREATE TABLE digital_contracts (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_digital_contracts_application_id ON digital_contracts (application_id);
+CREATE INDEX idx_digital_contracts_application_id ON public.digital_contracts (application_id);
 
--- Skill learning posts (social media style)
-CREATE TABLE skill_posts (
+-- Skill learning posts.
+CREATE TABLE public.skill_posts (
     post_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    admin_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    admin_id INTEGER NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
     post_title VARCHAR(255) NOT NULL,
     post_content TEXT NOT NULL,
-    post_type post_type_enum NOT NULL,
+    post_type public.post_type_enum NOT NULL,
     link_url VARCHAR(500),
     thumbnail_image VARCHAR(255),
     category VARCHAR(100),
@@ -201,19 +219,19 @@ CREATE TABLE skill_posts (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_skill_posts_admin_id ON skill_posts (admin_id);
-CREATE INDEX idx_skill_posts_created_at ON skill_posts (created_at);
-CREATE INDEX idx_skill_posts_type ON skill_posts (post_type);
-CREATE INDEX idx_skill_posts_featured_created ON skill_posts (is_featured, created_at);
-CREATE INDEX idx_skill_posts_type_featured_created ON skill_posts (post_type, is_featured, created_at);
-CREATE INDEX idx_skill_posts_category_featured_created ON skill_posts (category, is_featured, created_at);
+CREATE INDEX idx_skill_posts_admin_id ON public.skill_posts (admin_id);
+CREATE INDEX idx_skill_posts_created_at ON public.skill_posts (created_at);
+CREATE INDEX idx_skill_posts_type ON public.skill_posts (post_type);
+CREATE INDEX idx_skill_posts_featured_created ON public.skill_posts (is_featured, created_at);
+CREATE INDEX idx_skill_posts_type_featured_created ON public.skill_posts (post_type, is_featured, created_at);
+CREATE INDEX idx_skill_posts_category_featured_created ON public.skill_posts (category, is_featured, created_at);
 
--- Messages table
-CREATE TABLE messages (
+-- Messages table.
+CREATE TABLE public.messages (
     message_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    sender_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    receiver_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    job_id INTEGER REFERENCES job_posts(job_id) ON DELETE SET NULL,
+    sender_id INTEGER NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    receiver_id INTEGER NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    job_id INTEGER REFERENCES public.job_posts(job_id) ON DELETE SET NULL,
     message_content TEXT NOT NULL,
     attachment VARCHAR(255),
     is_read BOOLEAN DEFAULT FALSE,
@@ -221,16 +239,16 @@ CREATE TABLE messages (
     read_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_messages_sender_id ON messages (sender_id);
-CREATE INDEX idx_messages_receiver_id ON messages (receiver_id);
-CREATE INDEX idx_messages_conversation ON messages (sender_id, receiver_id);
-CREATE INDEX idx_messages_receiver_unread ON messages (receiver_id, is_read);
-CREATE INDEX idx_messages_sent_at ON messages (sent_at);
+CREATE INDEX idx_messages_sender_id ON public.messages (sender_id);
+CREATE INDEX idx_messages_receiver_id ON public.messages (receiver_id);
+CREATE INDEX idx_messages_conversation ON public.messages (sender_id, receiver_id);
+CREATE INDEX idx_messages_receiver_unread ON public.messages (receiver_id, is_read);
+CREATE INDEX idx_messages_sent_at ON public.messages (sent_at);
 
--- Notifications table
-CREATE TABLE notifications (
+-- Notifications table.
+CREATE TABLE public.notifications (
     notification_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
     notification_type VARCHAR(50) NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
@@ -242,13 +260,13 @@ CREATE TABLE notifications (
     read_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_notifications_user_id ON notifications (user_id);
-CREATE INDEX idx_notifications_is_read ON notifications (is_read);
-CREATE INDEX idx_notifications_user_read_created ON notifications (user_id, is_read, created_at);
-CREATE INDEX idx_notifications_created_at ON notifications (created_at);
+CREATE INDEX idx_notifications_user_id ON public.notifications (user_id);
+CREATE INDEX idx_notifications_is_read ON public.notifications (is_read);
+CREATE INDEX idx_notifications_user_read_created ON public.notifications (user_id, is_read, created_at);
+CREATE INDEX idx_notifications_created_at ON public.notifications (created_at);
 
--- Authentication rate limits (used for login brute-force protection)
-CREATE TABLE auth_rate_limits (
+-- Authentication rate limits.
+CREATE TABLE public.auth_rate_limits (
     rate_limit_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
     throttle_key CHAR(64) NOT NULL,
     scope VARCHAR(50) NOT NULL,
@@ -259,69 +277,88 @@ CREATE TABLE auth_rate_limits (
     CONSTRAINT uniq_throttle_key UNIQUE (throttle_key)
 );
 
-CREATE INDEX idx_auth_rate_limits_scope ON auth_rate_limits (scope);
-CREATE INDEX idx_auth_rate_limits_locked_until ON auth_rate_limits (locked_until);
+CREATE INDEX idx_auth_rate_limits_scope ON public.auth_rate_limits (scope);
+CREATE INDEX idx_auth_rate_limits_locked_until ON public.auth_rate_limits (locked_until);
 
--- User interactions table (for algorithm-based recommendations)
-CREATE TABLE user_interactions (
+-- User interactions table.
+CREATE TABLE public.user_interactions (
     interaction_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    interaction_type interaction_type_enum NOT NULL,
-    job_id INTEGER REFERENCES job_posts(job_id) ON DELETE CASCADE,
-    post_id INTEGER REFERENCES skill_posts(post_id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    interaction_type public.interaction_type_enum NOT NULL,
+    job_id INTEGER REFERENCES public.job_posts(job_id) ON DELETE CASCADE,
+    post_id INTEGER REFERENCES public.skill_posts(post_id) ON DELETE CASCADE,
     skill_tag VARCHAR(100),
     interaction_weight NUMERIC(3,2) DEFAULT 1.00,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_user_interactions_user_id ON user_interactions (user_id);
-CREATE INDEX idx_user_interactions_type ON user_interactions (interaction_type);
-CREATE INDEX idx_user_interactions_user_job_type ON user_interactions (user_id, job_id, interaction_type);
-CREATE INDEX idx_user_interactions_created_at ON user_interactions (created_at);
+CREATE INDEX idx_user_interactions_user_id ON public.user_interactions (user_id);
+CREATE INDEX idx_user_interactions_type ON public.user_interactions (interaction_type);
+CREATE INDEX idx_user_interactions_user_job_type ON public.user_interactions (user_id, job_id, interaction_type);
+CREATE INDEX idx_user_interactions_created_at ON public.user_interactions (created_at);
 
--- Transactions table
-CREATE TABLE transactions (
+-- Transactions table.
+CREATE TABLE public.transactions (
     transaction_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    transaction_type transaction_type_enum NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    transaction_type public.transaction_type_enum NOT NULL,
     amount NUMERIC(10,2) NOT NULL,
-    job_id INTEGER REFERENCES job_posts(job_id) ON DELETE SET NULL,
-    application_id INTEGER REFERENCES job_applications(application_id) ON DELETE SET NULL,
+    job_id INTEGER REFERENCES public.job_posts(job_id) ON DELETE SET NULL,
+    application_id INTEGER REFERENCES public.job_applications(application_id) ON DELETE SET NULL,
     description TEXT,
-    status transaction_status_enum DEFAULT 'pending',
+    status public.transaction_status_enum DEFAULT 'pending',
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_transactions_user_id ON transactions (user_id);
-CREATE INDEX idx_transactions_type ON transactions (transaction_type);
-CREATE INDEX idx_transactions_status ON transactions (status);
+CREATE INDEX idx_transactions_user_id ON public.transactions (user_id);
+CREATE INDEX idx_transactions_type ON public.transactions (transaction_type);
+CREATE INDEX idx_transactions_status ON public.transactions (status);
 
--- Triggers for automatic timestamp updates
+-- Triggers for automatic timestamp updates.
 CREATE TRIGGER trg_users_set_updated_at
-BEFORE UPDATE ON users
+BEFORE UPDATE ON public.users
 FOR EACH ROW
-EXECUTE FUNCTION set_updated_at();
+EXECUTE FUNCTION public.set_updated_at();
 
 CREATE TRIGGER trg_job_posts_set_updated_at
-BEFORE UPDATE ON job_posts
+BEFORE UPDATE ON public.job_posts
 FOR EACH ROW
-EXECUTE FUNCTION set_updated_at();
+EXECUTE FUNCTION public.set_updated_at();
 
 CREATE TRIGGER trg_skill_posts_set_updated_at
-BEFORE UPDATE ON skill_posts
+BEFORE UPDATE ON public.skill_posts
 FOR EACH ROW
-EXECUTE FUNCTION set_updated_at();
+EXECUTE FUNCTION public.set_updated_at();
 
 CREATE TRIGGER trg_auth_rate_limits_set_last_attempt_at
-BEFORE UPDATE ON auth_rate_limits
+BEFORE UPDATE ON public.auth_rate_limits
 FOR EACH ROW
-EXECUTE FUNCTION set_last_attempt_at();
+EXECUTE FUNCTION public.set_last_attempt_at();
+
+-- Keep public.users email synchronized if auth.users email changes.
+CREATE OR REPLACE FUNCTION public.sync_public_user_email_from_auth()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.users
+  SET email = NEW.email,
+      updated_at = NOW()
+  WHERE auth_user_id = NEW.id;
+
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_auth_user_email_sync
+AFTER UPDATE OF email ON auth.users
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_public_user_email_from_auth();
 
 COMMIT;
 
 -- Optional: create your first admin account manually after import.
--- IMPORTANT: generate your own strong password hash and never keep default credentials in production.
--- Example:
--- INSERT INTO users (mobile_number, email, password_hash, user_type, full_name, region, province, city)
--- VALUES ('09XXXXXXXXX', 'admin@example.com', '$2y$10$replace_with_real_hash', 'admin', 'Platform Administrator', 'NCR', 'Metro Manila', 'Manila');
+-- IMPORTANT: never keep default credentials in production.

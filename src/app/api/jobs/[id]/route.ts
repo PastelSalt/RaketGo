@@ -27,7 +27,7 @@ export async function GET(
       employer_name: string;
     }>
   >(
-    "SELECT j.job_id, j.job_title, j.job_description, j.location_region, j.location_province, j.location_city, j.pay_amount, j.pay_type, j.required_skills, j.preferred_skills, j.job_status, u.full_name AS employer_name FROM job_posts j JOIN users u ON j.employer_id = u.user_id WHERE j.job_id = ? LIMIT 1",
+    "SELECT j.job_id, j.job_title, j.job_description, j.location_region, j.location_province, j.location_city, j.pay_amount, j.pay_type, j.required_skills, j.preferred_skills, j.job_status, u.full_name AS employer_name FROM public.job_posts j JOIN public.users u ON j.employer_id = u.user_id WHERE j.job_id = ? LIMIT 1",
     [jobId]
   );
 

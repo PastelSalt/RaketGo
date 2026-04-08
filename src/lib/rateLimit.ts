@@ -17,7 +17,7 @@ async function hasRateLimitTable(): Promise<boolean> {
 
   checkedTable = true;
   const rows = await queryRows<Array<{ table_exists: boolean | number }>>(
-    "SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END AS table_exists FROM information_schema.tables WHERE table_name = 'auth_rate_limits'"
+    "SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END AS table_exists FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'auth_rate_limits'"
   );
   rateLimitTableExists = Boolean(rows[0]?.table_exists);
   return rateLimitTableExists;
@@ -36,7 +36,7 @@ export async function isRateLimitExceeded(
 
   const key = buildRateLimitKey(scope, identifier, ipAddress);
   const rows = await queryRows<RateLimitRow[]>(
-    "SELECT attempts, window_started_at, locked_until FROM auth_rate_limits WHERE throttle_key = ?",
+    "SELECT attempts, window_started_at, locked_until FROM public.auth_rate_limits WHERE throttle_key = ?",
     [key]
   );
 
@@ -57,7 +57,7 @@ export async function isRateLimitExceeded(
 
   if (windowStarted + windowSeconds * 1000 < now) {
     await execute(
-      "UPDATE auth_rate_limits SET attempts = 0, window_started_at = NOW(), locked_until = NULL WHERE throttle_key = ?",
+      "UPDATE public.auth_rate_limits SET attempts = 0, window_started_at = NOW(), locked_until = NULL WHERE throttle_key = ?",
       [key]
     );
     return { exceeded: false, retryAfterSeconds: 0 };
@@ -83,13 +83,13 @@ export async function registerRateLimitFailure(
 
   const key = buildRateLimitKey(scope, identifier, ipAddress);
   const rows = await queryRows<{ attempts: number; window_started_at: string }>(
-    "SELECT attempts, window_started_at FROM auth_rate_limits WHERE throttle_key = ?",
+    "SELECT attempts, window_started_at FROM public.auth_rate_limits WHERE throttle_key = ?",
     [key]
   );
 
   if (!rows[0]) {
     await execute(
-      "INSERT INTO auth_rate_limits (throttle_key, scope, attempts, window_started_at, last_attempt_at, locked_until) VALUES (?, ?, 1, NOW(), NOW(), NULL)",
+      "INSERT INTO public.auth_rate_limits (throttle_key, scope, attempts, window_started_at, last_attempt_at, locked_until) VALUES (?, ?, 1, NOW(), NOW(), NULL)",
       [key, scope]
     );
     return;
@@ -105,12 +105,12 @@ export async function registerRateLimitFailure(
   if (shouldLock) {
     if (windowExpired) {
       await execute(
-        "UPDATE auth_rate_limits SET attempts = ?, window_started_at = NOW(), last_attempt_at = NOW(), locked_until = ? WHERE throttle_key = ?",
+        "UPDATE public.auth_rate_limits SET attempts = ?, window_started_at = NOW(), last_attempt_at = NOW(), locked_until = ? WHERE throttle_key = ?",
         [attempts, lockUntil, key]
       );
     } else {
       await execute(
-        "UPDATE auth_rate_limits SET attempts = ?, last_attempt_at = NOW(), locked_until = ? WHERE throttle_key = ?",
+        "UPDATE public.auth_rate_limits SET attempts = ?, last_attempt_at = NOW(), locked_until = ? WHERE throttle_key = ?",
         [attempts, lockUntil, key]
       );
     }
@@ -120,14 +120,14 @@ export async function registerRateLimitFailure(
 
   if (windowExpired) {
     await execute(
-      "UPDATE auth_rate_limits SET attempts = ?, window_started_at = NOW(), last_attempt_at = NOW(), locked_until = NULL WHERE throttle_key = ?",
+      "UPDATE public.auth_rate_limits SET attempts = ?, window_started_at = NOW(), last_attempt_at = NOW(), locked_until = NULL WHERE throttle_key = ?",
       [attempts, key]
     );
     return;
   }
 
   await execute(
-    "UPDATE auth_rate_limits SET attempts = ?, last_attempt_at = NOW(), locked_until = NULL WHERE throttle_key = ?",
+    "UPDATE public.auth_rate_limits SET attempts = ?, last_attempt_at = NOW(), locked_until = NULL WHERE throttle_key = ?",
     [attempts, key]
   );
 }
@@ -137,5 +137,5 @@ export async function clearRateLimit(scope: string, identifier: string, ipAddres
     return;
   }
   const key = buildRateLimitKey(scope, identifier, ipAddress);
-  await execute("DELETE FROM auth_rate_limits WHERE throttle_key = ?", [key]);
+  await execute("DELETE FROM public.auth_rate_limits WHERE throttle_key = ?", [key]);
 }

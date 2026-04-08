@@ -18,31 +18,31 @@ export default async function DashboardPage() {
 
   if (session.userType === "worker") {
     const [user] = await queryRows<{ full_name: string; city: string; province: string; trust_score: number }>(
-      "SELECT full_name, city, province, trust_score FROM users WHERE user_id = ?",
+      "SELECT full_name, city, province, trust_score FROM public.users WHERE user_id = ?",
       [session.userId]
     );
 
     const skills = await queryRows<{ skill_id: number; skill_name: string; proficiency_level: string; is_verified: number }>(
-      "SELECT skill_id, skill_name, proficiency_level, is_verified FROM user_skills WHERE user_id = ? ORDER BY is_verified DESC, created_at DESC",
+      "SELECT skill_id, skill_name, proficiency_level, is_verified FROM public.user_skills WHERE user_id = ? ORDER BY is_verified DESC, created_at DESC",
       [session.userId]
     );
 
     const applications = await queryRows<
       Array<{ application_id: number; job_title: string; application_status: string; pay_amount: number; pay_type: string; applied_at: string; employer_name: string }>
     >(
-      "SELECT ja.application_id, ja.application_status, ja.applied_at, j.job_title, j.pay_amount, j.pay_type, u.full_name AS employer_name FROM job_applications ja JOIN job_posts j ON ja.job_id = j.job_id JOIN users u ON ja.employer_id = u.user_id WHERE ja.worker_id = ? ORDER BY ja.applied_at DESC LIMIT 10",
+      "SELECT ja.application_id, ja.application_status, ja.applied_at, j.job_title, j.pay_amount, j.pay_type, u.full_name AS employer_name FROM public.job_applications ja JOIN public.job_posts j ON ja.job_id = j.job_id JOIN public.users u ON ja.employer_id = u.user_id WHERE ja.worker_id = ? ORDER BY ja.applied_at DESC LIMIT 10",
       [session.userId]
     );
 
     const savedJobs = await queryRows<{ job_id: number; job_title: string; location_city: string; pay_amount: number; pay_type: string; job_status: string }>(
-      "SELECT j.job_id, j.job_title, j.location_city, j.pay_amount, j.pay_type, j.job_status FROM user_interactions ui JOIN job_posts j ON ui.job_id = j.job_id WHERE ui.user_id = ? AND ui.interaction_type = 'save' ORDER BY ui.created_at DESC LIMIT 10",
+      "SELECT j.job_id, j.job_title, j.location_city, j.pay_amount, j.pay_type, j.job_status FROM public.user_interactions ui JOIN public.job_posts j ON ui.job_id = j.job_id WHERE ui.user_id = ? AND ui.interaction_type = 'save' ORDER BY ui.created_at DESC LIMIT 10",
       [session.userId]
     );
 
     const [stats] = await queryRows<
       Array<{ total_applications: number; approved_applications: number; pending_applications: number; saved_jobs: number }>
     >(
-      "SELECT (SELECT COUNT(*) FROM job_applications WHERE worker_id = ?) AS total_applications, (SELECT COUNT(*) FROM job_applications WHERE worker_id = ? AND application_status = 'approved') AS approved_applications, (SELECT COUNT(*) FROM job_applications WHERE worker_id = ? AND application_status = 'pending') AS pending_applications, (SELECT COUNT(*) FROM user_interactions WHERE user_id = ? AND interaction_type = 'save') AS saved_jobs",
+      "SELECT (SELECT COUNT(*) FROM public.job_applications WHERE worker_id = ?) AS total_applications, (SELECT COUNT(*) FROM public.job_applications WHERE worker_id = ? AND application_status = 'approved') AS approved_applications, (SELECT COUNT(*) FROM public.job_applications WHERE worker_id = ? AND application_status = 'pending') AS pending_applications, (SELECT COUNT(*) FROM public.user_interactions WHERE user_id = ? AND interaction_type = 'save') AS saved_jobs",
       [session.userId, session.userId, session.userId, session.userId]
     );
 
@@ -131,28 +131,28 @@ export default async function DashboardPage() {
   }
 
   const [user] = await queryRows<{ full_name: string; city: string; province: string }>(
-    "SELECT full_name, city, province FROM users WHERE user_id = ?",
+    "SELECT full_name, city, province FROM public.users WHERE user_id = ?",
     [session.userId]
   );
 
   const jobs = await queryRows<
     Array<{ job_id: number; job_title: string; job_status: string; created_at: string; application_count: number; pending_count: number }>
   >(
-    "SELECT jp.job_id, jp.job_title, jp.job_status, jp.created_at, (SELECT COUNT(*) FROM job_applications WHERE job_id = jp.job_id) AS application_count, (SELECT COUNT(*) FROM job_applications WHERE job_id = jp.job_id AND application_status = 'pending') AS pending_count FROM job_posts jp WHERE jp.employer_id = ? ORDER BY jp.created_at DESC",
+    "SELECT jp.job_id, jp.job_title, jp.job_status, jp.created_at, (SELECT COUNT(*) FROM public.job_applications WHERE job_id = jp.job_id) AS application_count, (SELECT COUNT(*) FROM public.job_applications WHERE job_id = jp.job_id AND application_status = 'pending') AS pending_count FROM public.job_posts jp WHERE jp.employer_id = ? ORDER BY jp.created_at DESC",
     [session.userId]
   );
 
   const pendingApps = await queryRows<
     Array<{ application_id: number; job_title: string; worker_name: string; trust_score: number; applied_at: string }>
   >(
-    "SELECT ja.application_id, ja.applied_at, j.job_title, u.full_name AS worker_name, u.trust_score FROM job_applications ja JOIN job_posts j ON ja.job_id = j.job_id JOIN users u ON ja.worker_id = u.user_id WHERE ja.employer_id = ? AND ja.application_status = 'pending' ORDER BY ja.applied_at DESC LIMIT 8",
+    "SELECT ja.application_id, ja.applied_at, j.job_title, u.full_name AS worker_name, u.trust_score FROM public.job_applications ja JOIN public.job_posts j ON ja.job_id = j.job_id JOIN public.users u ON ja.worker_id = u.user_id WHERE ja.employer_id = ? AND ja.application_status = 'pending' ORDER BY ja.applied_at DESC LIMIT 8",
     [session.userId]
   );
 
   const [stats] = await queryRows<
     Array<{ total_jobs: number; active_jobs: number; total_applications: number; pending_applications: number }>
   >(
-    "SELECT (SELECT COUNT(*) FROM job_posts WHERE employer_id = ?) AS total_jobs, (SELECT COUNT(*) FROM job_posts WHERE employer_id = ? AND job_status = 'active') AS active_jobs, (SELECT COUNT(*) FROM job_applications WHERE employer_id = ?) AS total_applications, (SELECT COUNT(*) FROM job_applications WHERE employer_id = ? AND application_status = 'pending') AS pending_applications",
+    "SELECT (SELECT COUNT(*) FROM public.job_posts WHERE employer_id = ?) AS total_jobs, (SELECT COUNT(*) FROM public.job_posts WHERE employer_id = ? AND job_status = 'active') AS active_jobs, (SELECT COUNT(*) FROM public.job_applications WHERE employer_id = ?) AS total_applications, (SELECT COUNT(*) FROM public.job_applications WHERE employer_id = ? AND application_status = 'pending') AS pending_applications",
     [session.userId, session.userId, session.userId, session.userId]
   );
 

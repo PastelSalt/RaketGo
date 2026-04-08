@@ -103,7 +103,7 @@ export default async function HomePage({
 
   if (user?.userType === "worker") {
     whereParts.push(
-      "j.job_id NOT IN (SELECT job_id FROM job_applications WHERE worker_id = ?)"
+      "j.job_id NOT IN (SELECT job_id FROM public.job_applications WHERE worker_id = ?)"
     );
     args.push(user.userId);
   }
@@ -137,7 +137,7 @@ export default async function HomePage({
 
   try {
     const countRows = await queryRows<{ total: number }>(
-      `SELECT COUNT(*) AS total FROM job_posts j ${whereClause}`,
+      `SELECT COUNT(*) AS total FROM public.job_posts j ${whereClause}`,
       args
     );
 
@@ -160,8 +160,8 @@ export default async function HomePage({
     >(
       `SELECT j.job_id, j.job_title, j.location_city, j.location_region, j.pay_amount, j.pay_type, j.job_status, j.job_category, j.created_at,
               u.full_name AS employer_name
-       FROM job_posts j
-       JOIN users u ON j.employer_id = u.user_id
+       FROM public.job_posts j
+       JOIN public.users u ON j.employer_id = u.user_id
        ${whereClause}
        ORDER BY ${sortSql}
        LIMIT ? OFFSET ?`,
@@ -169,7 +169,7 @@ export default async function HomePage({
     );
 
     categories = await queryRows<{ job_category: string | null }>(
-      "SELECT DISTINCT job_category FROM job_posts WHERE job_category IS NOT NULL AND job_category != '' ORDER BY job_category ASC"
+      "SELECT DISTINCT job_category FROM public.job_posts WHERE job_category IS NOT NULL AND job_category != '' ORDER BY job_category ASC"
     );
   } catch (error) {
     hasDataError = true;
@@ -181,7 +181,7 @@ export default async function HomePage({
       announcements = await queryRows<
         Array<{ post_id: number; post_title: string; category: string | null; created_at: string }>
       >(
-        "SELECT post_id, post_title, category, created_at FROM skill_posts ORDER BY is_featured DESC, created_at DESC LIMIT 5"
+        "SELECT post_id, post_title, category, created_at FROM public.skill_posts ORDER BY is_featured DESC, created_at DESC LIMIT 5"
       );
     } catch (error) {
       console.error("Failed to load homepage announcements.", error);

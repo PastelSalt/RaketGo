@@ -14,27 +14,27 @@ export default async function AdminDashboardPage() {
   }
 
   const [userStats] = await queryRows<{ workers: number; employers: number; total: number }>(
-    "SELECT COUNT(*) AS total, SUM(CASE WHEN user_type = 'worker' THEN 1 ELSE 0 END) AS workers, SUM(CASE WHEN user_type = 'employer' THEN 1 ELSE 0 END) AS employers FROM users"
+    "SELECT COUNT(*) AS total, SUM(CASE WHEN user_type = 'worker' THEN 1 ELSE 0 END) AS workers, SUM(CASE WHEN user_type = 'employer' THEN 1 ELSE 0 END) AS employers FROM public.users"
   );
 
   const [jobStats] = await queryRows<{ total_jobs: number; active_jobs: number; in_progress_jobs: number }>(
-    "SELECT COUNT(*) AS total_jobs, SUM(CASE WHEN job_status = 'active' THEN 1 ELSE 0 END) AS active_jobs, SUM(CASE WHEN job_status = 'in_progress' THEN 1 ELSE 0 END) AS in_progress_jobs FROM job_posts"
+    "SELECT COUNT(*) AS total_jobs, SUM(CASE WHEN job_status = 'active' THEN 1 ELSE 0 END) AS active_jobs, SUM(CASE WHEN job_status = 'in_progress' THEN 1 ELSE 0 END) AS in_progress_jobs FROM public.job_posts"
   );
 
   const [appStats] = await queryRows<{ total_apps: number; approved_apps: number; pending_apps: number }>(
-    "SELECT COUNT(*) AS total_apps, SUM(CASE WHEN application_status = 'approved' THEN 1 ELSE 0 END) AS approved_apps, SUM(CASE WHEN application_status = 'pending' THEN 1 ELSE 0 END) AS pending_apps FROM job_applications"
+    "SELECT COUNT(*) AS total_apps, SUM(CASE WHEN application_status = 'approved' THEN 1 ELSE 0 END) AS approved_apps, SUM(CASE WHEN application_status = 'pending' THEN 1 ELSE 0 END) AS pending_apps FROM public.job_applications"
   );
 
   const [skillPosts] = await queryRows<{ total_posts: number }>(
-    "SELECT COUNT(*) AS total_posts FROM skill_posts"
+    "SELECT COUNT(*) AS total_posts FROM public.skill_posts"
   );
 
   const recentUsers = await queryRows<{ user_id: number; full_name: string; user_type: string; city: string; created_at: string }>(
-    "SELECT user_id, full_name, user_type, city, created_at FROM users WHERE user_type != 'admin' ORDER BY created_at DESC LIMIT 5"
+    "SELECT user_id, full_name, user_type, city, created_at FROM public.users WHERE user_type != 'admin' ORDER BY created_at DESC LIMIT 5"
   );
 
   const recentJobs = await queryRows<{ job_id: number; job_title: string; job_status: string; employer_name: string }>(
-    "SELECT j.job_id, j.job_title, j.job_status, u.full_name AS employer_name FROM job_posts j JOIN users u ON j.employer_id = u.user_id ORDER BY j.created_at DESC LIMIT 5"
+    "SELECT j.job_id, j.job_title, j.job_status, u.full_name AS employer_name FROM public.job_posts j JOIN public.users u ON j.employer_id = u.user_id ORDER BY j.created_at DESC LIMIT 5"
   );
 
   return (

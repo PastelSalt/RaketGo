@@ -12,6 +12,8 @@
 
 BEGIN;
 
+SET search_path TO public;
+
 DELETE FROM digital_contracts;
 DELETE FROM transactions;
 DELETE FROM user_interactions;
@@ -364,15 +366,15 @@ VALUES
 (12, 33, 'deposit', 1000.00, NULL, NULL, 'Wallet top-up for internet and call credits', 'pending', '2026-03-31 08:45:00', NULL);
 
 -- Keep identity sequences aligned with explicit IDs above.
-SELECT setval(pg_get_serial_sequence('users', 'user_id'), COALESCE((SELECT MAX(user_id) FROM users), 1), true);
-SELECT setval(pg_get_serial_sequence('skill_posts', 'post_id'), COALESCE((SELECT MAX(post_id) FROM skill_posts), 1), true);
-SELECT setval(pg_get_serial_sequence('user_skills', 'skill_id'), COALESCE((SELECT MAX(skill_id) FROM user_skills), 1), true);
-SELECT setval(pg_get_serial_sequence('job_posts', 'job_id'), COALESCE((SELECT MAX(job_id) FROM job_posts), 1), true);
-SELECT setval(pg_get_serial_sequence('job_applications', 'application_id'), COALESCE((SELECT MAX(application_id) FROM job_applications), 1), true);
-SELECT setval(pg_get_serial_sequence('digital_contracts', 'contract_id'), COALESCE((SELECT MAX(contract_id) FROM digital_contracts), 1), true);
-SELECT setval(pg_get_serial_sequence('messages', 'message_id'), COALESCE((SELECT MAX(message_id) FROM messages), 1), true);
-SELECT setval(pg_get_serial_sequence('notifications', 'notification_id'), COALESCE((SELECT MAX(notification_id) FROM notifications), 1), true);
-SELECT setval(pg_get_serial_sequence('user_interactions', 'interaction_id'), COALESCE((SELECT MAX(interaction_id) FROM user_interactions), 1), true);
-SELECT setval(pg_get_serial_sequence('transactions', 'transaction_id'), COALESCE((SELECT MAX(transaction_id) FROM transactions), 1), true);
+SELECT setval(pg_get_serial_sequence('public.users', 'user_id'), COALESCE((SELECT MAX(user_id) FROM public.users), 1), true);
+SELECT setval(pg_get_serial_sequence('public.skill_posts', 'post_id'), COALESCE((SELECT MAX(post_id) FROM public.skill_posts), 1), true);
+SELECT setval(pg_get_serial_sequence('public.user_skills', 'skill_id'), COALESCE((SELECT MAX(skill_id) FROM public.user_skills), 1), true);
+SELECT setval(pg_get_serial_sequence('public.job_posts', 'job_id'), COALESCE((SELECT MAX(job_id) FROM public.job_posts), 1), true);
+SELECT setval(pg_get_serial_sequence('public.job_applications', 'application_id'), COALESCE((SELECT MAX(application_id) FROM public.job_applications), 1), true);
+SELECT setval(pg_get_serial_sequence('public.digital_contracts', 'contract_id'), COALESCE((SELECT MAX(contract_id) FROM public.digital_contracts), 1), true);
+SELECT setval(pg_get_serial_sequence('public.messages', 'message_id'), COALESCE((SELECT MAX(message_id) FROM public.messages), 1), true);
+SELECT setval(pg_get_serial_sequence('public.notifications', 'notification_id'), COALESCE((SELECT MAX(notification_id) FROM public.notifications), 1), true);
+SELECT setval(pg_get_serial_sequence('public.user_interactions', 'interaction_id'), COALESCE((SELECT MAX(interaction_id) FROM public.user_interactions), 1), true);
+SELECT setval(pg_get_serial_sequence('public.transactions', 'transaction_id'), COALESCE((SELECT MAX(transaction_id) FROM public.transactions), 1), true);
 
 COMMIT;

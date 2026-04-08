@@ -20,7 +20,7 @@ export async function GET() {
       created_at: string;
     }>
   >(
-    "SELECT notification_id, notification_type, title, message, is_read, action_url, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
+    "SELECT notification_id, notification_type, title, message, is_read, action_url, created_at FROM public.notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
     [session.userId]
   );
 
@@ -40,12 +40,12 @@ export async function POST(request: Request) {
     const notificationId = Number(formData.get("notification_id") ?? 0);
     if (notificationId > 0) {
       await execute(
-        "UPDATE notifications SET is_read = TRUE, read_at = NOW() WHERE notification_id = ? AND user_id = ?",
+        "UPDATE public.notifications SET is_read = TRUE, read_at = NOW() WHERE notification_id = ? AND user_id = ?",
         [notificationId, session.userId]
       );
     }
   } else if (action === "mark_all_read") {
-    await execute("UPDATE notifications SET is_read = TRUE, read_at = NOW() WHERE user_id = ? AND is_read = FALSE", [
+    await execute("UPDATE public.notifications SET is_read = TRUE, read_at = NOW() WHERE user_id = ? AND is_read = FALSE", [
       session.userId
     ]);
   }

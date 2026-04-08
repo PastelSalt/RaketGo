@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
   if (action === "save") {
     await execute(
-      "INSERT INTO user_interactions (user_id, interaction_type, job_id) SELECT ?, 'save', ? WHERE NOT EXISTS (SELECT 1 FROM user_interactions WHERE user_id = ? AND interaction_type = 'save' AND job_id = ?)",
+      "INSERT INTO public.user_interactions (user_id, interaction_type, job_id) SELECT ?, 'save', ? WHERE NOT EXISTS (SELECT 1 FROM public.user_interactions WHERE user_id = ? AND interaction_type = 'save' AND job_id = ?)",
       [session.userId, jobId, session.userId, jobId]
     );
     return jobRedirect(request, jobId, "success", "Job saved.");
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
   if (action === "unsave") {
     await execute(
-      "DELETE FROM user_interactions WHERE user_id = ? AND job_id = ? AND interaction_type = 'save'",
+      "DELETE FROM public.user_interactions WHERE user_id = ? AND job_id = ? AND interaction_type = 'save'",
       [session.userId, jobId]
     );
     return jobRedirect(request, jobId, "success", "Saved job removed.");
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     const [job] = await queryRows<
       Array<{ employer_id: number; slots_available: number; slots_filled: number; job_status: string }>
     >(
-      "SELECT employer_id, slots_available, slots_filled, job_status FROM job_posts WHERE job_id = ? LIMIT 1",
+      "SELECT employer_id, slots_available, slots_filled, job_status FROM public.job_posts WHERE job_id = ? LIMIT 1",
       [jobId]
     );
 
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     }
 
     const [existing] = await queryRows<{ application_id: number; application_status: string }>(
-      "SELECT application_id, application_status FROM job_applications WHERE job_id = ? AND worker_id = ? LIMIT 1",
+      "SELECT application_id, application_status FROM public.job_applications WHERE job_id = ? AND worker_id = ? LIMIT 1",
       [jobId, session.userId]
     );
 
@@ -87,18 +87,18 @@ export async function POST(request: Request) {
 
     if (existing) {
       await execute(
-        "UPDATE job_applications SET application_status = 'pending', cover_letter = ?, applied_at = NOW(), reviewed_at = NULL WHERE application_id = ?",
+        "UPDATE public.job_applications SET application_status = 'pending', cover_letter = ?, applied_at = NOW(), reviewed_at = NULL WHERE application_id = ?",
         [coverLetter || null, existing.application_id]
       );
     } else {
       await execute(
-        "INSERT INTO job_applications (job_id, worker_id, employer_id, cover_letter) VALUES (?, ?, ?, ?)",
+        "INSERT INTO public.job_applications (job_id, worker_id, employer_id, cover_letter) VALUES (?, ?, ?, ?)",
         [jobId, session.userId, job.employer_id, coverLetter || null]
       );
     }
 
     await execute(
-      "INSERT INTO notifications (user_id, notification_type, title, message, related_id, related_type, action_url) VALUES (?, 'application', 'New Job Application', ?, ?, 'job', ?)",
+      "INSERT INTO public.notifications (user_id, notification_type, title, message, related_id, related_type, action_url) VALUES (?, 'application', 'New Job Application', ?, ?, 'job', ?)",
       [job.employer_id, `${session.fullName} applied to your job posting.`, jobId, `/jobs/${jobId}`]
     );
 
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
 
   if (action === "withdraw") {
     const result = await execute(
-      "UPDATE job_applications SET application_status = 'withdrawn', reviewed_at = NOW() WHERE job_id = ? AND worker_id = ? AND application_status = 'pending'",
+      "UPDATE public.job_applications SET application_status = 'withdrawn', reviewed_at = NOW() WHERE job_id = ? AND worker_id = ? AND application_status = 'pending'",
       [jobId, session.userId]
     );
 
@@ -116,13 +116,13 @@ export async function POST(request: Request) {
     }
 
     const [owner] = await queryRows<{ employer_id: number }>(
-      "SELECT employer_id FROM job_posts WHERE job_id = ?",
+      "SELECT employer_id FROM public.job_posts WHERE job_id = ?",
       [jobId]
     );
 
     if (owner) {
       await execute(
-        "INSERT INTO notifications (user_id, notification_type, title, message, related_id, related_type, action_url) VALUES (?, 'application', 'Application Withdrawn', ?, ?, 'job', ?)",
+        "INSERT INTO public.notifications (user_id, notification_type, title, message, related_id, related_type, action_url) VALUES (?, 'application', 'Application Withdrawn', ?, ?, 'job', ?)",
         [owner.employer_id, `${session.fullName} withdrew an application.`, jobId, `/jobs/${jobId}`]
       );
     }
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
     const [application] = await queryRows<
       Array<{ worker_id: number; job_id: number; slots_available: number; slots_filled: number }>
     >(
-      "SELECT ja.worker_id, ja.job_id, jp.slots_available, jp.slots_filled FROM job_applications ja JOIN job_posts jp ON ja.job_id = jp.job_id WHERE ja.application_id = ? AND ja.employer_id = ? AND ja.job_id = ? AND ja.application_status = 'pending' LIMIT 1",
+      "SELECT ja.worker_id, ja.job_id, jp.slots_available, jp.slots_filled FROM public.job_applications ja JOIN public.job_posts jp ON ja.job_id = jp.job_id WHERE ja.application_id = ? AND ja.employer_id = ? AND ja.job_id = ? AND ja.application_status = 'pending' LIMIT 1",
       [applicationId, session.userId, jobId]
     );
 
@@ -151,22 +151,22 @@ export async function POST(request: Request) {
     }
 
     await execute(
-      "UPDATE job_applications SET application_status = 'approved', reviewed_at = NOW() WHERE application_id = ?",
+      "UPDATE public.job_applications SET application_status = 'approved', reviewed_at = NOW() WHERE application_id = ?",
       [applicationId]
     );
 
     await execute(
-      "UPDATE job_posts SET slots_filled = LEAST(slots_filled + 1, slots_available) WHERE job_id = ?",
+      "UPDATE public.job_posts SET slots_filled = LEAST(slots_filled + 1, slots_available) WHERE job_id = ?",
       [jobId]
     );
 
     await execute(
-      "UPDATE job_posts SET job_status = 'in_progress' WHERE job_id = ? AND slots_filled >= slots_available AND job_status = 'active'",
+      "UPDATE public.job_posts SET job_status = 'in_progress' WHERE job_id = ? AND slots_filled >= slots_available AND job_status = 'active'",
       [jobId]
     );
 
     await execute(
-      "INSERT INTO notifications (user_id, notification_type, title, message, related_id, related_type, action_url) VALUES (?, 'application', 'Application Approved', 'Your job application has been approved.', ?, 'job', ?)",
+      "INSERT INTO public.notifications (user_id, notification_type, title, message, related_id, related_type, action_url) VALUES (?, 'application', 'Application Approved', 'Your job application has been approved.', ?, 'job', ?)",
       [application.worker_id, jobId, `/jobs/${jobId}`]
     );
 
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
 
   if (action === "reject") {
     const [application] = await queryRows<{ worker_id: number }>(
-      "SELECT worker_id FROM job_applications WHERE application_id = ? AND employer_id = ? AND job_id = ? AND application_status = 'pending' LIMIT 1",
+      "SELECT worker_id FROM public.job_applications WHERE application_id = ? AND employer_id = ? AND job_id = ? AND application_status = 'pending' LIMIT 1",
       [applicationId, session.userId, jobId]
     );
 
@@ -184,12 +184,12 @@ export async function POST(request: Request) {
     }
 
     await execute(
-      "UPDATE job_applications SET application_status = 'rejected', reviewed_at = NOW() WHERE application_id = ?",
+      "UPDATE public.job_applications SET application_status = 'rejected', reviewed_at = NOW() WHERE application_id = ?",
       [applicationId]
     );
 
     await execute(
-      "INSERT INTO notifications (user_id, notification_type, title, message, related_id, related_type, action_url) VALUES (?, 'application', 'Application Update', 'Your application was not selected this time.', ?, 'job', ?)",
+      "INSERT INTO public.notifications (user_id, notification_type, title, message, related_id, related_type, action_url) VALUES (?, 'application', 'Application Update', 'Your application was not selected this time.', ?, 'job', ?)",
       [application.worker_id, jobId, `/jobs/${jobId}`]
     );
 

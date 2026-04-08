@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const conversations = await queryRows<
       Array<{ user_id: number; full_name: string; user_type: string; unread_count: number; last_message: string | null; last_sent_at: string | null }>
     >(
-      "SELECT DISTINCT u.user_id, u.full_name, u.user_type, (SELECT COUNT(*) FROM messages m3 WHERE m3.sender_id = u.user_id AND m3.receiver_id = ? AND m3.is_read = FALSE) AS unread_count, (SELECT m2.message_content FROM messages m2 WHERE (m2.sender_id = ? AND m2.receiver_id = u.user_id) OR (m2.sender_id = u.user_id AND m2.receiver_id = ?) ORDER BY m2.sent_at DESC LIMIT 1) AS last_message, (SELECT m4.sent_at FROM messages m4 WHERE (m4.sender_id = ? AND m4.receiver_id = u.user_id) OR (m4.sender_id = u.user_id AND m4.receiver_id = ?) ORDER BY m4.sent_at DESC LIMIT 1) AS last_sent_at FROM messages m JOIN users u ON u.user_id = CASE WHEN m.sender_id = ? THEN m.receiver_id ELSE m.sender_id END WHERE (m.sender_id = ? OR m.receiver_id = ?) ORDER BY last_sent_at DESC",
+      "SELECT DISTINCT u.user_id, u.full_name, u.user_type, (SELECT COUNT(*) FROM public.messages m3 WHERE m3.sender_id = u.user_id AND m3.receiver_id = ? AND m3.is_read = FALSE) AS unread_count, (SELECT m2.message_content FROM public.messages m2 WHERE (m2.sender_id = ? AND m2.receiver_id = u.user_id) OR (m2.sender_id = u.user_id AND m2.receiver_id = ?) ORDER BY m2.sent_at DESC LIMIT 1) AS last_message, (SELECT m4.sent_at FROM public.messages m4 WHERE (m4.sender_id = ? AND m4.receiver_id = u.user_id) OR (m4.sender_id = u.user_id AND m4.receiver_id = ?) ORDER BY m4.sent_at DESC LIMIT 1) AS last_sent_at FROM public.messages m JOIN public.users u ON u.user_id = CASE WHEN m.sender_id = ? THEN m.receiver_id ELSE m.sender_id END WHERE (m.sender_id = ? OR m.receiver_id = ?) ORDER BY last_sent_at DESC",
       [
         session.userId,
         session.userId,
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
   const messages = await queryRows<
     Array<{ message_id: number; sender_id: number; receiver_id: number; message_content: string; sent_at: string }>
   >(
-    "SELECT message_id, sender_id, receiver_id, message_content, sent_at FROM messages WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY sent_at ASC",
+    "SELECT message_id, sender_id, receiver_id, message_content, sent_at FROM public.messages WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY sent_at ASC",
     [session.userId, partnerId, partnerId, session.userId]
   );
 
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
   }
 
   const [receiver] = await queryRows<{ user_id: number }>(
-    "SELECT user_id FROM users WHERE user_id = ? AND account_status = 'active' LIMIT 1",
+    "SELECT user_id FROM public.users WHERE user_id = ? AND account_status = 'active' LIMIT 1",
     [parsed.data.receiver_id]
   );
 
@@ -80,14 +80,14 @@ export async function POST(request: Request) {
     return NextResponse.redirect(errorUrl);
   }
 
-  await execute("INSERT INTO messages (sender_id, receiver_id, message_content) VALUES (?, ?, ?)", [
+  await execute("INSERT INTO public.messages (sender_id, receiver_id, message_content) VALUES (?, ?, ?)", [
     session.userId,
     parsed.data.receiver_id,
     parsed.data.message_content
   ]);
 
   await execute(
-    "INSERT INTO notifications (user_id, notification_type, title, message, related_id, related_type, action_url) VALUES (?, 'message', 'New Message', ?, ?, 'message', ?)",
+    "INSERT INTO public.notifications (user_id, notification_type, title, message, related_id, related_type, action_url) VALUES (?, 'message', 'New Message', ?, ?, 'message', ?)",
     [
       parsed.data.receiver_id,
       `${session.fullName} sent you a message.`,

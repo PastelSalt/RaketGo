@@ -54,7 +54,7 @@ export default async function JobDetailsPage({
       employer_trust_score: number;
     }>
   >(
-    "SELECT j.job_id, j.employer_id, j.job_title, j.job_description, j.location_region, j.location_province, j.location_city, j.specific_address, j.pay_amount, j.pay_type, j.required_skills, j.preferred_skills, j.job_category, j.slots_available, j.slots_filled, j.job_status, j.created_at, u.full_name AS employer_name, u.mobile_number AS employer_phone, u.email AS employer_email, u.trust_score AS employer_trust_score FROM job_posts j JOIN users u ON j.employer_id = u.user_id WHERE j.job_id = ?",
+    "SELECT j.job_id, j.employer_id, j.job_title, j.job_description, j.location_region, j.location_province, j.location_city, j.specific_address, j.pay_amount, j.pay_type, j.required_skills, j.preferred_skills, j.job_category, j.slots_available, j.slots_filled, j.job_status, j.created_at, u.full_name AS employer_name, u.mobile_number AS employer_phone, u.email AS employer_email, u.trust_score AS employer_trust_score FROM public.job_posts j JOIN public.users u ON j.employer_id = u.user_id WHERE j.job_id = ?",
     [jobId]
   );
 
@@ -69,7 +69,7 @@ export default async function JobDetailsPage({
           await queryRows<
             Array<{ application_id: number; application_status: string; applied_at: string }>
           >(
-            "SELECT application_id, application_status, applied_at FROM job_applications WHERE job_id = ? AND worker_id = ? LIMIT 1",
+            "SELECT application_id, application_status, applied_at FROM public.job_applications WHERE job_id = ? AND worker_id = ? LIMIT 1",
             [jobId, session.userId]
           )
         )[0]
@@ -80,7 +80,7 @@ export default async function JobDetailsPage({
       ? Boolean(
           (
             await queryRows<Array<{ interaction_id: number }>>(
-              "SELECT interaction_id FROM user_interactions WHERE user_id = ? AND job_id = ? AND interaction_type = 'save' LIMIT 1",
+              "SELECT interaction_id FROM public.user_interactions WHERE user_id = ? AND job_id = ? AND interaction_type = 'save' LIMIT 1",
               [session.userId, jobId]
             )
           )[0]
@@ -101,14 +101,14 @@ export default async function JobDetailsPage({
             applied_at: string;
           }>
         >(
-          "SELECT ja.application_id, ja.worker_id, u.full_name, u.mobile_number, u.trust_score, ja.application_status, ja.cover_letter, ja.applied_at FROM job_applications ja JOIN users u ON ja.worker_id = u.user_id WHERE ja.job_id = ? ORDER BY ja.applied_at DESC",
+          "SELECT ja.application_id, ja.worker_id, u.full_name, u.mobile_number, u.trust_score, ja.application_status, ja.cover_letter, ja.applied_at FROM public.job_applications ja JOIN public.users u ON ja.worker_id = u.user_id WHERE ja.job_id = ? ORDER BY ja.applied_at DESC",
           [jobId]
         )
       : [];
 
   if (session) {
     await execute(
-      "INSERT INTO user_interactions (user_id, interaction_type, job_id) VALUES (?, 'view', ?)",
+      "INSERT INTO public.user_interactions (user_id, interaction_type, job_id) VALUES (?, 'view', ?)",
       [session.userId, jobId]
     ).catch(() => undefined);
   }

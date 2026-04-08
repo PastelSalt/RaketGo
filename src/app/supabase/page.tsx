@@ -13,6 +13,7 @@ export default async function Page() {
   const supabase = createClient(cookieStore);
 
   const { data: posts, error } = await supabase
+    .schema("public")
     .from("skill_posts")
     .select("post_id,post_title,category,created_at")
     .order("created_at", { ascending: false })
@@ -23,7 +24,7 @@ export default async function Page() {
     <section className="card grid gap-3">
       <h1 className="page-title mb-0">Supabase Feed Check</h1>
       <p className="muted m-0">
-        Source table: <strong>skill_posts</strong>
+        Source table: <strong>public.skill_posts</strong>
       </p>
 
       {error ? (
@@ -34,7 +35,7 @@ export default async function Page() {
 
       {!error && !posts?.length ? (
         <p className="muted m-0">
-          Connected, but no rows found in <strong>skill_posts</strong>.
+          Connected, but no rows found in <strong>public.skill_posts</strong>.
         </p>
       ) : null}
 

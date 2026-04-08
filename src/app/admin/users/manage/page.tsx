@@ -14,7 +14,7 @@ export default async function ManageUsersPage() {
   const users = await queryRows<
     Array<{ user_id: number; full_name: string; mobile_number: string; user_type: string; city: string; account_status: string }>
   >(
-    "SELECT user_id, full_name, mobile_number, user_type, city, account_status FROM users WHERE user_type != 'admin' ORDER BY created_at DESC LIMIT 100"
+    "SELECT user_id, full_name, mobile_number, user_type, city, account_status FROM public.users WHERE user_type != 'admin' ORDER BY created_at DESC LIMIT 100"
   );
 
   return (

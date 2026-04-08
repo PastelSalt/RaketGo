@@ -23,7 +23,7 @@ export async function GET() {
       created_at: string;
     }>
   >(
-    "SELECT job_id, job_title, location_city, location_region, pay_amount, pay_type, job_status, created_at FROM job_posts WHERE job_status = 'active' ORDER BY created_at DESC LIMIT 50"
+    "SELECT job_id, job_title, location_city, location_region, pay_amount, pay_type, job_status, created_at FROM public.job_posts WHERE job_status = 'active' ORDER BY created_at DESC LIMIT 50"
   );
   return NextResponse.json({ data: jobs });
 }
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   }
 
   const result = await execute(
-    "INSERT INTO job_posts (employer_id, job_title, job_description, location_region, location_province, location_city, specific_address, pay_amount, pay_type, required_skills, preferred_skills, job_category, slots_available, job_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')",
+    "INSERT INTO public.job_posts (employer_id, job_title, job_description, location_region, location_province, location_city, specific_address, pay_amount, pay_type, required_skills, preferred_skills, job_category, slots_available, job_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')",
     [
       session.userId,
       parsed.data.job_title,

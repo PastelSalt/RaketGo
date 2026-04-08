@@ -7,6 +7,7 @@ This folder contains the migrated architecture from the original PHP codebase to
 - Next.js 16 (App Router)
 - React 19
 - TypeScript
+- Supabase Auth (auth.users) + app profiles in public.users
 - PostgreSQL via pg (primary)
 - MySQL via mysql2 (fallback)
 - JWT cookie sessions via jose
@@ -105,7 +106,12 @@ Notes:
 
 ## Database
 
-The app expects the same schema as database/schema.sql from the legacy PHP project.
+Use [database/schema.sql](database/schema.sql) for Supabase setup.
+
+- Application tables are created in the `public` schema.
+- Supabase auth identities are stored in `auth.users`.
+- App users in `public.users` are linked through `public.users.auth_user_id`.
+- The schema intentionally does not drop or redefine Supabase-managed schemas (`auth`, `realtime`, `storage`, `vault`).
 
 ## Notes
 
