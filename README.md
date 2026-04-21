@@ -1,17 +1,24 @@
-# RaketGo Next.js Migration
+# RaketGo - Job Matching Platform for the Philippines
 
-This folder contains the migrated architecture from the original PHP codebase to Next.js App Router + React + TypeScript.
+A modern job marketplace connecting workers and employers across the Philippines. Built with Next.js, React, TypeScript, and PostgreSQL for fast job discovery, messaging, and secure transactions.
+
+## Features
+
+- **Smart Job Search**: Filter by location, pay type, skills, and posting date
+- **For Workers**: Browse opportunities, apply to jobs, track applications, and learn new skills
+- **For Employers**: Post jobs quickly, review applications, message candidates, and manage hiring
+- **Messaging & Notifications**: Real-time communication between workers and employers
+- **Skill Development**: Browse certifications, training, courses, and workshops
+- **Secure Payments**: Built-in advance payouts and transaction management
+- **Trust & Verification**: User ratings and verified skill badges
 
 ## Stack
 
-- Next.js 16 (App Router)
-- React 19
-- TypeScript
-- Supabase Auth (auth.users) + app profiles in public.users
-- PostgreSQL via pg (primary)
-- MySQL via mysql2 (fallback)
-- JWT cookie sessions via jose
-- Zod validation
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, PostgreSQL, Supabase Auth
+- **Database**: PostgreSQL (primary), MySQL (fallback via pg/mysql2)
+- **Authentication**: JWT cookies via jose, Supabase Auth
+- **Validation**: Zod
 
 ## Route Mapping (PHP -> Next.js)
 

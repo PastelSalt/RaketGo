@@ -25,7 +25,7 @@ const noto = Noto_Sans_JP({
 
 export const metadata: Metadata = {
   title: "RaketGo",
-  description: "RaketGo migrated to Next.js + React + TypeScript"
+  description: "Connect with job opportunities across the Philippines. RaketGo helps workers and employers find the right match with smart filtering, messaging, and secure payments."
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

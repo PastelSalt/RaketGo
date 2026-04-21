@@ -236,10 +236,10 @@ export default async function HomePage({
     <div className="grid gap-6">
       <section className="card space-y-4">
         <div className="space-y-2">
-          <h1 className="page-title">Find Jobs Faster</h1>
+          <h1 className="page-title">Find Your Next Opportunity</h1>
           <p className="muted">
-            Baitoru-style filtering with a modern job-search experience inspired by
-            today&apos;s professional hiring platforms.
+            Search thousands of jobs across the Philippines. Filter by location, pay type, and
+            skills to find positions that match your experience and availability.
           </p>
         </div>
         <form className="grid gap-2 md:grid-cols-[2fr_1fr_1fr_auto]" method="get">
