@@ -22,14 +22,14 @@ export async function Navbar() {
     <header className="site-header">
       <div className="container nav-shell">
         <Link href="/" className="brand-link">
-          <span className="brand-mark">✿</span>
+          <span className="brand-mark text-2xl">✿</span>
           <span>
             Raket<span className="brand-highlight">G</span>o
           </span>
         </Link>
 
         <nav className="nav-links">
-          <Link href="/" className="nav-pill">
+          <Link href="/" className="nav-pill" prefetch={true}>
             Home
           </Link>
           <Link href="/learn" className="nav-pill">
@@ -52,7 +52,11 @@ export async function Navbar() {
               </Link>
               <Link href="/notifications" className="nav-pill notification-link">
                 Notifications
-                {unreadCount > 0 ? <span className="badge">{unreadCount}</span> : null}
+                {unreadCount > 0 ? (
+                  <span className="badge" aria-label={`${unreadCount} unread notifications`}>
+                    {unreadCount}
+                  </span>
+                ) : null}
               </Link>
               <Link href={roleHomePath(user.userType) as any} className="nav-pill">
                 {user.userType === "admin" ? "Admin" : "Dashboard"}

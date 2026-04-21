@@ -10,13 +10,17 @@ import "./globals.css";
 const poppins = Poppins({
   subsets: ["latin"],
   variable: "--font-primary",
-  weight: ["400", "500", "600", "700"]
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: true
 });
 
 const noto = Noto_Sans_JP({
   subsets: ["latin"],
   variable: "--font-accent",
-  weight: ["400", "500", "700"]
+  weight: ["400", "500", "700"],
+  display: "swap",
+  preload: true
 });
 
 export const metadata: Metadata = {
