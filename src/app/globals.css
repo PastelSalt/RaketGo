@@ -75,7 +75,7 @@
   }
 
   .nav-pill {
-    @apply inline-flex items-center rounded-full border border-brand-blue-strong bg-white px-4 py-2 transition-all hover:border-brand-red-strong hover:bg-brand-blue focus:outline-none focus:ring-2 focus:ring-brand-red-strong focus:ring-offset-1;
+    @apply inline-flex items-center gap-1 rounded-full border border-brand-blue-strong bg-white px-4 py-2 font-medium text-sm transition-all duration-200 hover:border-brand-blue hover:bg-brand-blue hover:shadow-sm hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-brand-blue-strong focus:ring-offset-1;
   }
 
   .notification-link {
@@ -83,36 +83,96 @@
   }
 
   .badge {
-    @apply inline-flex min-h-6 min-w-6 items-center justify-center rounded-full border border-brand-red-strong bg-brand-red-strong px-2 text-xs font-bold text-white;
+    @apply inline-flex min-h-6 min-w-6 items-center justify-center rounded-full border-0 bg-brand-red-strong px-2 text-xs font-bold text-white shadow-sm;
   }
 
+  /* Base Button Styles */
   .btn {
-    @apply inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
     position: relative;
+    overflow: hidden;
+  }
+
+  .btn:hover:not(:disabled) {
+    @apply -translate-y-0.5 shadow-md;
+  }
+
+  .btn:active:not(:disabled) {
+    @apply scale-95;
   }
 
   .btn:disabled {
-    @apply cursor-not-allowed border-brand-blue bg-white text-brand-ink-soft;
+    @apply cursor-not-allowed opacity-60;
   }
 
-  .btn:not(:disabled) {
-    @apply active:scale-95;
+  /* Size Variants */
+  .btn-xs {
+    @apply px-2.5 py-1 text-xs;
   }
 
   .btn-small {
     @apply px-3 py-1.5 text-xs sm:text-sm;
   }
 
+  .btn-md {
+    @apply px-4 py-2 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+
+  .btn-xl {
+    @apply px-8 py-4 text-lg;
+  }
+
+  /* Primary Button - Main Action */
   .btn-primary {
-    @apply border-brand-blue-strong bg-brand-blue-strong text-brand-ink hover:bg-brand-blue focus:ring-brand-red-strong;
+    @apply border-brand-blue-strong bg-brand-blue-strong text-brand-ink shadow-sm hover:shadow-md hover:bg-brand-blue focus:ring-brand-blue-strong;
   }
 
+  /* Outline Button - Secondary Action */
   .btn-outline {
-    @apply border-brand-blue bg-white text-brand-ink hover:bg-brand-blue focus:ring-brand-blue-strong;
+    @apply border border-brand-blue-strong bg-white text-brand-blue-strong hover:bg-brand-blue hover:bg-opacity-10 focus:ring-brand-blue-strong;
   }
 
+  .btn-outline:hover:not(:disabled) {
+    @apply border-brand-blue;
+  }
+
+  /* Secondary Button - Alternate Action */
   .btn-secondary {
-    @apply border-brand-red bg-brand-red text-brand-ink hover:bg-brand-red-strong focus:ring-brand-red-strong;
+    @apply border-brand-red-strong bg-brand-red text-brand-ink shadow-sm hover:shadow-md hover:bg-brand-red-strong focus:ring-brand-red-strong;
+  }
+
+  /* Soft Button - Subtle Action */
+  .btn-soft {
+    @apply border border-brand-blue-strong bg-brand-blue bg-opacity-20 text-brand-blue-strong hover:bg-opacity-30 focus:ring-brand-blue-strong;
+  }
+
+  /* Ghost Button - Minimal Style */
+  .btn-ghost {
+    @apply border-transparent bg-transparent text-brand-ink hover:bg-brand-blue hover:bg-opacity-10 focus:ring-brand-blue-strong;
+  }
+
+  /* Success Button - Positive Action */
+  .btn-success {
+    @apply border-green-600 bg-green-600 text-white shadow-sm hover:shadow-md hover:bg-green-700 focus:ring-green-600;
+  }
+
+  /* Danger Button - Destructive Action */
+  .btn-danger {
+    @apply border-red-600 bg-red-600 text-white shadow-sm hover:shadow-md hover:bg-red-700 focus:ring-red-600;
+  }
+
+  /* Icon Button */
+  .btn-icon {
+    @apply aspect-square p-2 text-lg;
+  }
+
+  /* Loading State */
+  .btn.is-loading {
+    @apply pointer-events-none opacity-80;
   }
 
   .page-title {
@@ -124,7 +184,7 @@
   }
 
   .card {
-    @apply rounded-2xl border border-brand-blue-strong bg-white p-5 transition-all hover:border-brand-red-strong hover:shadow-sm;
+    @apply rounded-2xl border border-brand-blue-strong bg-white p-5 transition-all duration-200 shadow-sm hover:shadow-md hover:border-brand-red-strong hover:-translate-y-0.5;
     animation: fade-up 360ms ease-out;
     contain: content;
   }
@@ -134,7 +194,7 @@
   }
 
   .sub-card {
-    @apply rounded-xl border border-brand-blue-strong bg-brand-blue p-4 transition-colors;
+    @apply rounded-xl border border-brand-blue-strong bg-brand-blue p-4 transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5;
   }
 
   .sub-card-active {
@@ -172,7 +232,7 @@
   .stack-form input,
   .stack-form select,
   .stack-form textarea {
-    @apply w-full rounded-xl border border-brand-blue-strong bg-white px-3 py-2.5 text-sm text-brand-ink placeholder:text-brand-ink-soft transition-all focus:border-brand-red-strong focus:outline-none focus:ring-2 focus:ring-brand-red-strong focus:ring-opacity-50;
+    @apply w-full rounded-xl border border-brand-blue-strong bg-white px-3 py-2.5 text-sm text-brand-ink placeholder:text-brand-ink-soft transition-all duration-200 shadow-sm focus:border-brand-red-strong focus:outline-none focus:ring-2 focus:ring-brand-red-strong focus:ring-opacity-50 focus:shadow-md;
   }
 
   .stack-form {
@@ -188,27 +248,27 @@
   }
 
   .tag {
-    @apply inline-flex items-center justify-center rounded-full border border-brand-red-strong bg-brand-red px-3 py-1 text-xs font-semibold text-brand-ink transition-colors;
+    @apply inline-flex items-center justify-center rounded-full border border-brand-red-strong bg-brand-red px-3 py-1 text-xs font-semibold text-brand-ink transition-all shadow-sm hover:shadow-md;
   }
 
   .filter-chip {
-    @apply inline-flex items-center justify-center rounded-full border border-brand-blue-strong bg-white px-3 py-1 text-xs font-semibold text-brand-ink transition-all cursor-pointer;
+    @apply inline-flex items-center justify-center rounded-full border border-brand-blue-strong bg-white px-3 py-1 text-xs font-semibold text-brand-ink transition-all duration-200 cursor-pointer hover:shadow-sm hover:-translate-y-0.5;
   }
 
   .filter-chip:hover {
-    @apply bg-brand-blue border-brand-blue-strong;
+    @apply bg-brand-blue bg-opacity-5 border-brand-blue;
   }
 
   .filter-chip-active {
-    @apply border-brand-red-strong bg-brand-red text-brand-ink;
+    @apply border-brand-red-strong bg-brand-red text-brand-ink shadow-sm;
   }
 
   .filter-chip-active:hover {
-    @apply bg-brand-red-strong;
+    @apply bg-brand-red-strong shadow-md;
   }
 
   .stat-card {
-    @apply rounded-2xl border border-brand-blue-strong bg-brand-blue p-5 transition-all hover:shadow-md;
+    @apply rounded-2xl border border-brand-blue-strong bg-brand-blue p-5 transition-all duration-200 shadow-sm hover:shadow-lg hover:-translate-y-1;
     animation: fade-up 360ms ease-out;
     contain: content;
   }
@@ -230,7 +290,7 @@
   }
 
   .footer-link {
-    @apply text-sm font-medium text-brand-ink transition-colors hover:text-brand-red-strong;
+    @apply text-sm font-medium text-brand-ink transition-colors duration-200 hover:text-brand-red-strong hover:underline underline-offset-2;
   }
 
   .footer-bottom {
@@ -246,16 +306,16 @@
   }
 
   .message-bubble {
-    @apply max-w-[90%] rounded-2xl border border-brand-blue-strong p-3 transition-all;
+    @apply max-w-[90%] rounded-2xl border border-brand-blue-strong p-3 transition-all duration-200 shadow-sm;
     word-wrap: break-word;
   }
 
   .message-bubble.mine {
-    @apply ml-auto bg-brand-blue text-brand-ink;
+    @apply ml-auto bg-brand-blue text-brand-ink shadow-md;
   }
 
   .message-bubble.theirs {
-    @apply mr-auto bg-white text-brand-ink;
+    @apply mr-auto bg-white text-brand-ink shadow-sm;
   }
 
   .notification-top {
@@ -263,15 +323,15 @@
   }
 
   .alert {
-    @apply mb-4 rounded-xl border px-4 py-3 text-sm font-medium transition-all;
+    @apply mb-4 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200 shadow-sm;
   }
 
   .alert-error {
-    @apply border-brand-red-strong bg-brand-red/10 text-brand-red-strong;
+    @apply border-red-200 bg-red-50 text-red-700 shadow-sm;
   }
 
   .alert-success {
-    @apply border-brand-blue-strong bg-brand-blue/10 text-brand-blue-strong;
+    @apply border-green-200 bg-green-50 text-green-700 shadow-sm;
   }
 
   .pager {
